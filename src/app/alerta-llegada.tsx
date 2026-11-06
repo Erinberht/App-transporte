@@ -63,7 +63,7 @@ export default function ArrivalAlertScreen() {
           variant={choice === 'search' ? 'selected' : 'outline'}
           onPress={() => {
             setChoice('search');
-            router.replace('/');
+            router.replace('/elegir-ruta');
           }}
         />
       </View>

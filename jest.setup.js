@@ -22,3 +22,37 @@ jest.mock('react-native-maps', () => {
 jest.mock('expo-network', () => ({
   useNetworkState: jest.fn(() => ({ isConnected: true, isInternetReachable: true })),
 }));
+
+// expo-location: permiso aún sin decidir; al pedirlo se concede y devuelve un punto de
+// Montería. Cada test puede cambiar las respuestas con mockResolvedValueOnce.
+jest.mock('expo-location', () => ({
+  Accuracy: { Lowest: 1, Low: 2, Balanced: 3, High: 4, Highest: 5, BestForNavigation: 6 },
+  getForegroundPermissionsAsync: jest.fn(async () => ({
+    status: 'undetermined',
+    granted: false,
+    canAskAgain: true,
+  })),
+  requestForegroundPermissionsAsync: jest.fn(async () => ({
+    status: 'granted',
+    granted: true,
+    canAskAgain: true,
+  })),
+  hasServicesEnabledAsync: jest.fn(async () => true),
+  getLastKnownPositionAsync: jest.fn(async () => null),
+  getCurrentPositionAsync: jest.fn(async () => ({
+    coords: { latitude: 8.759, longitude: -75.879, accuracy: 35 },
+    timestamp: 0,
+  })),
+}));
+
+// Selector de hora: componente simple (iOS) y apertura imperativa (Android).
+jest.mock('@react-native-community/datetimepicker', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  const DateTimePicker = (props) => React.createElement(View, { ...props, testID: 'time-picker' });
+  return {
+    __esModule: true,
+    default: DateTimePicker,
+    DateTimePickerAndroid: { open: jest.fn(), dismiss: jest.fn() },
+  };
+});

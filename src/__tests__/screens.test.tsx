@@ -5,8 +5,9 @@ import { renderRouter } from 'expo-router/testing-library';
 import ArrivalAlertScreen from '../app/alerta-llegada';
 import BusOnMapScreen from '../app/bus-en-el-mapa';
 import ShareTripScreen from '../app/compartir';
+import ChooseRouteScreen from '../app/elegir-ruta';
 import InTripScreen from '../app/en-viaje';
-import ChooseRouteScreen from '../app/index';
+import WhereToScreen from '../app/index';
 import { TripProvider } from '../state/trip';
 
 // Layout de prueba: igual al real pero sin esperar la carga de fuentes.
@@ -20,7 +21,8 @@ function TestLayout() {
 
 const routes = {
   _layout: TestLayout,
-  index: ChooseRouteScreen,
+  index: WhereToScreen,
+  'elegir-ruta': ChooseRouteScreen,
   'bus-en-el-mapa': BusOnMapScreen,
   compartir: ShareTripScreen,
   'en-viaje': InTripScreen,
@@ -30,8 +32,24 @@ const routes = {
 const open = (initialUrl: string) => renderRouter(routes, { initialUrl });
 
 describe('Pantallas del flujo', () => {
-  it('1 · Elegir ruta: lista las rutas y muestra la seleccionada', async () => {
+  it('0 · ¿A dónde vas?: destino único, hora de clase y continuar', async () => {
     await open('/');
+
+    expect(screen.getByText('¿A dónde vas?')).toBeOnTheScreen();
+    expect(screen.getByText('Universidad de Córdoba')).toBeOnTheScreen();
+    expect(screen.getByText('Sede Montería · campus principal')).toBeOnTheScreen();
+    expect(screen.getAllByRole('radio')).toHaveLength(1);
+    expect(screen.queryByText(/Berástegui/)).not.toBeOnTheScreen();
+    expect(screen.getByText('7:00 a. m.')).toBeOnTheScreen();
+    // Antes del flujo de 5 pasos: no muestra progreso.
+    expect(screen.queryByText(/de 5$/)).not.toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByText('Buscar rutas'));
+    expect(screen).toHavePathname('/elegir-ruta');
+  });
+
+  it('1 · Elegir ruta: lista las rutas y muestra la seleccionada', async () => {
+    await open('/elegir-ruta');
 
     expect(screen.getByText('Elige tu ruta')).toBeOnTheScreen();
     expect(screen.getByText('4 rutas')).toBeOnTheScreen();
@@ -95,9 +113,17 @@ describe('Pantallas del flujo', () => {
     expect(screen).toHavePathname('/');
   });
 
+  it('5 · "Buscar otra ruta" vuelve a la lista de rutas', async () => {
+    await open('/alerta-llegada');
+
+    await fireEvent.press(screen.getByText('Buscar otra ruta'));
+    expect(screen).toHavePathname('/elegir-ruta');
+  });
+
   it('recorre el flujo completo con la ruta elegida por el usuario', async () => {
     await open('/');
 
+    await fireEvent.press(screen.getByText('Buscar rutas'));
     await fireEvent.press(screen.getByText('P1'));
     await fireEvent.press(screen.getByText('Ver mi bus'));
     expect(screen.getByText('Ruta P1 · Sigue el recorrido hasta tu parada.')).toBeOnTheScreen();
