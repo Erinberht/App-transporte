@@ -42,3 +42,4 @@ yarn-error.*
 
 # tests
 coverage/
+.env
