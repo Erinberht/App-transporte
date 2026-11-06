@@ -72,12 +72,7 @@ export function RouteMap({ height, busLabel }: Props) {
       onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
       accessibilityLabel="Mapa del recorrido de la ruta"
     >
-      <View
-        style={[
-          styles.river,
-          { height: height + 50, right: 0.104 * height - 32 },
-        ]}
-      />
+      <View style={[styles.river, { height: height + 50, right: 0.104 * height - 32 }]} />
 
       <View
         style={[styles.park, { left: pctX(15), width: pctX(61), top: y(0.34), height: y(0.23) }]}
@@ -90,18 +85,28 @@ export function RouteMap({ height, busLabel }: Props) {
           key={i}
           style={[
             styles.block,
-            { left: pctX(b.x), width: pctX(b.w), top: b.top === null ? 13 : y(b.top), height: y(b.h) },
+            {
+              left: pctX(b.x),
+              width: pctX(b.w),
+              top: b.top === null ? 13 : y(b.top),
+              height: y(b.h),
+            },
           ]}
         />
       ))}
 
       {STREETS.map((x) => (
-        <View key={x} style={[styles.street, { left: pctX(x - 7), width: 14, top: 0, bottom: 0 }]} />
+        <View
+          key={x}
+          style={[styles.street, { left: pctX(x - 7), width: 14, top: 0, bottom: 0 }]}
+        />
       ))}
       {AVENUES.map((f) => (
         <View key={f} style={[styles.street, { top: y(f) - 8, height: 16, left: 0, right: 0 }]} />
       ))}
-      <Text style={[styles.label, { left: pctX(122), top: y(AVENUES[0]) - 20 }]}>Av. Principal</Text>
+      <Text style={[styles.label, { left: pctX(122), top: y(AVENUES[0]) - 20 }]}>
+        Av. Principal
+      </Text>
 
       <Svg style={StyleSheet.absoluteFill} pointerEvents="none">
         <Path
