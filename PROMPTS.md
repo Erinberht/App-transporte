@@ -29,7 +29,7 @@ Reemplaza la ilustración src/components/RouteMap.tsx por un mapa real centrado 
 
 **2.1 Ubicación y destino**
 ```
-Con expo-location, pide permiso y obtén la ubicación del usuario. Añade una pantalla inicial "¿A dónde vas?" con la Universidad de Córdoba (sede Berástegui) como destino por defecto, y un campo para elegir hora de entrada a clase. Guarda el último destino. Estructura el código para que luego se puedan agregar otros destinos de Montería.
+Con expo-location, pide permiso y obtén la ubicación del usuario. Añade una pantalla inicial "¿A dónde vas?" con la Universidad de Córdoba, sede Montería (campus principal), como único destino por ahora, y un campo para elegir hora de entrada a clase. No incluyas otras sedes (como Berástegui) ni otros destinos todavía; solo deja el código preparado (lista de destinos en un solo lugar) para agregarlos más adelante.
 ```
 
 **2.2 Datos de rutas**

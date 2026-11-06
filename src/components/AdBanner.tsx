@@ -2,7 +2,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { ComponentProps } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { colors, radius } from '../theme';
+import { colors, fonts, fontSize, radius } from '../theme';
 import type { Ad } from '../types';
 
 type IconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
@@ -56,18 +56,24 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: radius.md,
   },
-  icon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  icon: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   text: { flex: 1, gap: 2 },
   meta: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   tag: {
-    fontSize: 9,
-    fontWeight: '700',
+    fontSize: fontSize.mapLabel,
+    fontFamily: fonts.bold,
     color: colors.textMuted,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-  brand: { fontSize: 11, fontWeight: '600', flexShrink: 1 },
-  headline: { fontSize: 14, fontWeight: '700', color: colors.text },
-  body: { fontSize: 12, color: colors.textMuted },
-  cta: { fontSize: 13, fontWeight: '700' },
+  brand: { fontSize: fontSize.caption, fontFamily: fonts.semibold, flexShrink: 1 },
+  headline: { fontSize: fontSize.bodyLg, fontFamily: fonts.semibold, color: colors.text },
+  body: { fontSize: fontSize.small, fontFamily: fonts.regular, color: colors.textMuted },
+  cta: { fontSize: fontSize.body, fontFamily: fonts.semibold },
 });

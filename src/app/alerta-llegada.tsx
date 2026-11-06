@@ -1,5 +1,5 @@
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { BellRing, Clock3, Search, Users } from 'lucide-react-native';
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -10,7 +10,7 @@ import { ScreenLayout } from '../components/ScreenLayout';
 import { SAMPLE_ADS } from '../data/ads';
 import { getRoute, OCCUPANCY_LABEL } from '../data/routes';
 import { useTrip } from '../state/trip';
-import { colors, radius } from '../theme';
+import { colors, fonts, fontSize, radius } from '../theme';
 
 // Paso 5 de 5 · "Alerta de llegada"
 export default function ArrivalAlertScreen() {
@@ -32,7 +32,7 @@ export default function ArrivalAlertScreen() {
     >
       <View style={styles.alert}>
         <View style={styles.alertTop}>
-          <MaterialCommunityIcons name="bell-ring-outline" size={20} color={colors.success} />
+          <BellRing size={20} color={colors.success} />
           <Text style={styles.alertType}>Alerta de llegada · {route.name}</Text>
         </View>
         <Text style={styles.alertMessage}>Tu bus llega en {route.etaMinutes} min</Text>
@@ -41,28 +41,32 @@ export default function ArrivalAlertScreen() {
       <RouteMap height={192} busLabel={route.name} />
 
       <View style={styles.occupancy}>
-        <MaterialCommunityIcons name="account-multiple-outline" size={24} color={colors.primary} />
-        <View style={{ gap: 3 }}>
-          <Text style={styles.occupancyTitle}>Cupo: {OCCUPANCY_LABEL[occupancy].toLowerCase()}</Text>
+        <Users size={24} color={colors.primary} />
+        <View style={styles.occupancyText}>
+          <Text style={styles.occupancyTitle}>
+            Cupo: {OCCUPANCY_LABEL[occupancy].toLowerCase()}
+          </Text>
           <Text style={styles.occupancySub}>Reportado por un viajero</Text>
         </View>
       </View>
 
-      <Button
-        label="Esperar"
-        icon={choice === 'wait' ? 'check' : 'clock-outline'}
-        variant={choice === 'wait' ? 'selected' : 'outline'}
-        onPress={() => setChoice('wait')}
-      />
-      <Button
-        label="Buscar otra ruta"
-        icon="magnify"
-        variant={choice === 'search' ? 'selected' : 'outline'}
-        onPress={() => {
-          setChoice('search');
-          router.replace('/');
-        }}
-      />
+      <View style={styles.actions}>
+        <Button
+          label="Esperar"
+          icon={Clock3}
+          variant={choice === 'wait' ? 'selected' : 'outline'}
+          onPress={() => setChoice('wait')}
+        />
+        <Button
+          label="Buscar otra ruta"
+          icon={Search}
+          variant={choice === 'search' ? 'selected' : 'outline'}
+          onPress={() => {
+            setChoice('search');
+            router.replace('/');
+          }}
+        />
+      </View>
 
       {/* Anuncio de muestra: aparece al final del recorrido, cuando el usuario ya terminó. */}
       <AdBanner ad={SAMPLE_ADS[2]} variant="card" />
@@ -73,23 +77,25 @@ export default function ArrivalAlertScreen() {
 const styles = StyleSheet.create({
   alert: {
     padding: 18,
-    gap: 12,
-    borderRadius: radius.lg,
+    gap: 10,
+    borderRadius: radius.md,
     backgroundColor: colors.successSoft,
   },
   alertTop: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  alertType: { fontSize: 13, fontWeight: '600', color: colors.success },
-  alertMessage: { fontSize: 28, fontWeight: '800', color: colors.success },
+  alertType: { fontFamily: fonts.semibold, fontSize: fontSize.body, color: colors.success },
+  alertMessage: { fontFamily: fonts.bold, fontSize: fontSize.alert, color: colors.success },
   occupancy: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
+    gap: 12,
     padding: 16,
     borderRadius: radius.md,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
   },
-  occupancyTitle: { fontSize: 16, fontWeight: '800', color: colors.text },
-  occupancySub: { fontSize: 12, color: colors.textMuted },
+  occupancyText: { flex: 1, gap: 4 },
+  occupancyTitle: { fontFamily: fonts.semibold, fontSize: fontSize.lead, color: colors.text },
+  occupancySub: { fontFamily: fonts.regular, fontSize: fontSize.small, color: colors.textMuted },
+  actions: { gap: 10 },
 });

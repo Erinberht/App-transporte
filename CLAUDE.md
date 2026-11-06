@@ -9,6 +9,7 @@ App para estudiantes de la Universidad de Córdoba (Montería, Colombia) que ayu
 - Compartir ubicación en vivo al subir (opcional: escanear QR del bus) y reportar cupo (lleno/medio/vacío).
 - Rutas sugeridas según el perfil (lugares frecuentes, horario de clases).
 - Modelo predictivo de tiempos con datos compartidos voluntariamente (festivos, horas pico, desvíos).
+- Alcance actual: SOLO la sede Montería de la Universidad de Córdoba como destino. No agregar otras sedes (Berástegui, etc.) ni otros destinos por ahora.
 - Más adelante: otros destinos de la ciudad, más usuarios y anuncios.
 
 ## Reglas
