@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "unicordoba-bus",
-    "slug": "unicordoba-bus",
+    "name": "Mi bus",
+    "slug": "mi-bus-unicordoba",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -20,6 +20,13 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "scheme": "mibus",
+    "plugins": [
+      "expo-router"
+    ],
+    "experiments": {
+      "typedRoutes": true
     }
   }
 }
