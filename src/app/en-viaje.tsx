@@ -1,6 +1,12 @@
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import type { ComponentProps } from 'react';
 import { router } from 'expo-router';
+import {
+  ShieldCheck,
+  Square,
+  UserRound,
+  Users,
+  UsersRound,
+  type LucideIcon,
+} from 'lucide-react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { LiveBadge } from '../components/LiveBadge';
@@ -8,15 +14,13 @@ import { RouteMap } from '../components/RouteMap';
 import { ScreenLayout } from '../components/ScreenLayout';
 import { getRoute, OCCUPANCY_LABEL } from '../data/routes';
 import { useTrip } from '../state/trip';
-import { colors, radius } from '../theme';
+import { colors, fonts, fontSize, lineHeight, radius } from '../theme';
 import type { Occupancy } from '../types';
 
-type IconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
-
-const OPTIONS: { value: Occupancy; icon: IconName }[] = [
-  { value: 'full', icon: 'account-group-outline' },
-  { value: 'medium', icon: 'account-multiple-outline' },
-  { value: 'empty', icon: 'account-outline' },
+const OPTIONS: { value: Occupancy; icon: LucideIcon }[] = [
+  { value: 'full', icon: UsersRound },
+  { value: 'medium', icon: Users },
+  { value: 'empty', icon: UserRound },
 ];
 
 // Paso 4 de 5 · "En viaje"
@@ -30,24 +34,25 @@ export default function InTripScreen() {
       title="Estás en viaje"
       subtitle={`Ruta ${route.name} · Tu recorrido ayuda a otros viajeros.`}
       ctaLabel="Dejar de compartir"
-      ctaIcon="square-outline"
+      ctaIcon={Square}
       onCta={() => {
         // TODO: detener el envío de ubicación (y detectar automáticamente cuando el usuario baja).
         setSharing(false);
         router.push('/alerta-llegada');
       }}
     >
-      <View style={styles.liveRow}>
-        <Text style={styles.liveTitle}>Compartiendo tu recorrido en vivo</Text>
-        <LiveBadge />
+      <View style={styles.live}>
+        <View style={styles.liveRow}>
+          <Text style={styles.liveTitle}>Compartiendo tu recorrido en vivo</Text>
+          <LiveBadge />
+        </View>
+        <RouteMap height={228} busLabel={route.name} />
       </View>
-
-      <RouteMap height={228} busLabel={route.name} />
 
       <View style={styles.card}>
         <Text style={styles.cardTitle}>¿Cómo va el bus?</Text>
         <View style={styles.options}>
-          {OPTIONS.map(({ value, icon }) => {
+          {OPTIONS.map(({ value, icon: Icon }) => {
             const selected = occupancy === value;
             return (
               <Pressable
@@ -57,12 +62,8 @@ export default function InTripScreen() {
                 onPress={() => setOccupancy(value)}
                 style={[styles.option, selected && styles.optionSelected]}
               >
-                <MaterialCommunityIcons
-                  name={icon}
-                  size={20}
-                  color={selected ? colors.primary : colors.textMuted}
-                />
-                <Text style={[styles.optionLabel, selected && { color: colors.primary }]}>
+                <Icon size={20} color={selected ? colors.primary : colors.textMuted} />
+                <Text style={[styles.optionLabel, selected && styles.optionLabelSelected]}>
                   {OCCUPANCY_LABEL[value]}
                 </Text>
               </Pressable>
@@ -75,7 +76,7 @@ export default function InTripScreen() {
       </View>
 
       <View style={styles.autoStop}>
-        <MaterialCommunityIcons name="shield-check-outline" size={20} color={colors.success} />
+        <ShieldCheck size={20} color={colors.success} />
         <View style={styles.autoStopText}>
           <Text style={styles.autoStopTitle}>Se detiene solo al bajar</Text>
           <Text style={styles.autoStopBody}>
@@ -88,8 +89,15 @@ export default function InTripScreen() {
 }
 
 const styles = StyleSheet.create({
+  live: { gap: 12 },
   liveRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  liveTitle: { fontSize: 13, fontWeight: '700', color: colors.success },
+  liveTitle: {
+    flex: 1,
+    fontFamily: fonts.semibold,
+    fontSize: fontSize.bodyLg,
+    lineHeight: lineHeight(fontSize.bodyLg, 1.4),
+    color: colors.success,
+  },
   card: {
     padding: 16,
     gap: 12,
@@ -98,12 +106,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  cardTitle: { fontSize: 17, fontWeight: '800', color: colors.text },
+  cardTitle: { fontFamily: fonts.semibold, fontSize: fontSize.title3, color: colors.text },
   options: { flexDirection: 'row', gap: 8 },
   option: {
     flex: 1,
     height: 72,
-    gap: 6,
+    gap: 7,
     borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
@@ -111,17 +119,28 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  optionSelected: { backgroundColor: colors.primarySoft, borderColor: colors.primary, borderWidth: 1.5 },
-  optionLabel: { fontSize: 13, fontWeight: '600', color: colors.textMuted },
-  confirm: { fontSize: 11, color: colors.textMuted },
+  optionSelected: {
+    backgroundColor: colors.primarySoft,
+    borderColor: colors.primary,
+    borderWidth: 1.5,
+  },
+  optionLabel: { fontFamily: fonts.medium, fontSize: fontSize.body, color: colors.textMuted },
+  optionLabelSelected: { fontFamily: fonts.semibold, color: colors.primary },
+  confirm: { fontFamily: fonts.regular, fontSize: fontSize.caption, color: colors.textMuted },
   autoStop: {
     flexDirection: 'row',
+    alignItems: 'flex-start',
     gap: 10,
     padding: 14,
     borderRadius: radius.md,
     backgroundColor: colors.successSoft,
   },
   autoStopText: { flex: 1, gap: 4 },
-  autoStopTitle: { fontSize: 13, fontWeight: '700', color: colors.success },
-  autoStopBody: { fontSize: 12, color: colors.success },
+  autoStopTitle: { fontFamily: fonts.semibold, fontSize: fontSize.bodyLg, color: colors.success },
+  autoStopBody: {
+    fontFamily: fonts.regular,
+    fontSize: fontSize.small,
+    lineHeight: lineHeight(fontSize.small),
+    color: colors.textMuted,
+  },
 });

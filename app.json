@@ -23,7 +23,9 @@
     },
     "scheme": "mibus",
     "plugins": [
-      "expo-router"
+      "expo-router",
+      "expo-font",
+      "expo-splash-screen"
     ],
     "experiments": {
       "typedRoutes": true
