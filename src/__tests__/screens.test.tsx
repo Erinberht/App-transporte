@@ -9,11 +9,6 @@ import InTripScreen from '../app/en-viaje';
 import ChooseRouteScreen from '../app/index';
 import { TripProvider } from '../state/trip';
 
-jest.mock(
-  'react-native-safe-area-context',
-  () => jest.requireActual('react-native-safe-area-context/jest/mock').default,
-);
-
 // Layout de prueba: igual al real pero sin esperar la carga de fuentes.
 function TestLayout() {
   return (
