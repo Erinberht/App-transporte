@@ -38,6 +38,28 @@ describe('TripProvider / useTrip', () => {
     expect(result.current.sharing).toBe(false);
   });
 
+  it('arranca con la sede Montería, entrada a las 7:00 y sin origen', async () => {
+    const { result } = await renderHook(() => useTrip(), { wrapper: TripProvider });
+
+    expect(result.current.destinationId).toBe('unicordoba-monteria');
+    expect(result.current.classTime).toEqual({ hours: 7, minutes: 0 });
+    expect(result.current.origin).toBeNull();
+  });
+
+  it('reset borra la ubicación pero conserva destino y hora de clase', async () => {
+    const { result } = await renderHook(() => useTrip(), { wrapper: TripProvider });
+
+    await act(() => {
+      result.current.setClassTime({ hours: 10, minutes: 30 });
+      result.current.setOrigin({ latitude: 8.76, longitude: -75.88 });
+    });
+    await act(() => result.current.reset());
+
+    expect(result.current.origin).toBeNull();
+    expect(result.current.classTime).toEqual({ hours: 10, minutes: 30 });
+    expect(result.current.destinationId).toBe('unicordoba-monteria');
+  });
+
   it('falla con un mensaje claro si se usa fuera del provider', async () => {
     const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
     await expect(renderHook(() => useTrip())).rejects.toThrow(

@@ -1,53 +1,59 @@
 import { router } from 'expo-router';
-import { ArrowRight, BusFront, Check } from 'lucide-react-native';
+import { ArrowRight, Check, GraduationCap } from 'lucide-react-native';
+import { useEffect } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { AdBanner } from '../components/AdBanner';
-import { RouteMap } from '../components/RouteMap';
+import { ClassTimeField } from '../components/ClassTimeField';
+import { LocationCard } from '../components/LocationCard';
 import { ScreenLayout } from '../components/ScreenLayout';
-import { SAMPLE_ADS } from '../data/ads';
-import { ROUTES } from '../data/routes';
+import { DESTINATIONS } from '../data/destinations';
+import { useUserLocation } from '../location/useUserLocation';
 import { useTrip } from '../state/trip';
 import { colors, fonts, fontSize, radius } from '../theme';
 
-// Paso 1 de 5 · "Elegir ruta"
-export default function ChooseRouteScreen() {
-  const { routeId, setRouteId } = useTrip();
+// Pantalla inicial · "¿A dónde vas?" (antes del flujo de 5 pasos).
+export default function WhereToScreen() {
+  const { destinationId, setDestinationId, classTime, setClassTime, setOrigin } = useTrip();
+  const location = useUserLocation();
+
+  // La ubicación detectada pasa a ser el origen del viaje (solo en memoria).
+  const coords = location.state.status === 'located' ? location.state.coords : null;
+  useEffect(() => {
+    setOrigin(coords);
+  }, [coords, setOrigin]);
 
   return (
     <ScreenLayout
-      step={1}
-      title="Elige tu ruta"
-      subtitle="Encuentra tu bus y viaja con más certeza."
-      footerNote="Selecciona una ruta para ver su recorrido."
-      ctaLabel="Ver mi bus"
+      title="¿A dónde vas?"
+      subtitle="Te ayudamos a llegar a tiempo a clase."
+      footerNote="Puedes continuar sin compartir tu ubicación."
+      ctaLabel="Buscar rutas"
       ctaIcon={ArrowRight}
-      onCta={() => router.push('/bus-en-el-mapa')}
+      onCta={() => router.push('/elegir-ruta')}
     >
-      <RouteMap height={164} />
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Desde</Text>
+        <LocationCard state={location.state} onRequest={location.request} />
+      </View>
 
-      <View style={styles.list}>
-        <View style={styles.listHeader}>
-          <Text style={styles.listTitle}>Rutas disponibles</Text>
-          <Text style={styles.listCount}>{ROUTES.length} rutas</Text>
-        </View>
-
-        {ROUTES.map((route) => {
-          const selected = route.id === routeId;
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Destino</Text>
+        {DESTINATIONS.map((destination) => {
+          const selected = destination.id === destinationId;
           return (
             <Pressable
-              key={route.id}
+              key={destination.id}
               accessibilityRole="radio"
               accessibilityState={{ selected }}
-              onPress={() => setRouteId(route.id)}
+              onPress={() => setDestinationId(destination.id)}
               style={[styles.option, selected && styles.optionSelected]}
             >
               <View style={[styles.badge, selected && styles.badgeSelected]}>
-                <BusFront size={20} color={selected ? colors.onPrimary : colors.textMuted} />
+                <GraduationCap size={20} color={selected ? colors.onPrimary : colors.textMuted} />
               </View>
               <View style={styles.optionText}>
-                <Text style={styles.routeName}>{route.name}</Text>
-                {selected ? <Text style={styles.selectedText}>Ruta seleccionada</Text> : null}
+                <Text style={styles.optionName}>{destination.name}</Text>
+                <Text style={styles.optionDetail}>{destination.detail}</Text>
               </View>
               <View style={[styles.radio, selected && styles.radioSelected]}>
                 {selected ? <Check size={12} color={colors.onPrimary} strokeWidth={3} /> : null}
@@ -57,27 +63,21 @@ export default function ChooseRouteScreen() {
         })}
       </View>
 
-      {/* Anuncio de muestra (modelo de negocio futuro) */}
-      <AdBanner ad={SAMPLE_ADS[0]} />
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Hora de entrada a clase</Text>
+        <ClassTimeField value={classTime} onChange={setClassTime} />
+      </View>
     </ScreenLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  list: { gap: 10 },
-  listHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    paddingBottom: 3,
-  },
-  listTitle: { fontFamily: fonts.semibold, fontSize: fontSize.body, color: colors.text },
-  listCount: { fontFamily: fonts.regular, fontSize: fontSize.small, color: colors.textMuted },
+  section: { gap: 10 },
+  sectionTitle: { fontFamily: fonts.semibold, fontSize: fontSize.body, color: colors.text },
   option: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    height: 70,
     padding: 14,
     borderRadius: radius.md,
     backgroundColor: colors.surface,
@@ -99,8 +99,8 @@ const styles = StyleSheet.create({
   },
   badgeSelected: { backgroundColor: colors.primary },
   optionText: { flex: 1, gap: 3 },
-  routeName: { fontFamily: fonts.semibold, fontSize: fontSize.lead, color: colors.text },
-  selectedText: { fontFamily: fonts.regular, fontSize: fontSize.caption, color: colors.primary },
+  optionName: { fontFamily: fonts.semibold, fontSize: fontSize.lead, color: colors.text },
+  optionDetail: { fontFamily: fonts.regular, fontSize: fontSize.small, color: colors.textMuted },
   radio: {
     width: 20,
     height: 20,

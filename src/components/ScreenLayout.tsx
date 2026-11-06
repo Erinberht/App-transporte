@@ -9,7 +9,8 @@ import { Button } from './Button';
 const TOTAL_STEPS = 5;
 
 type Props = {
-  step: number;
+  /** Paso del flujo (1 a 5). Sin valor no se muestra el progreso (pantallas previas al flujo). */
+  step?: number;
   title: string;
   subtitle: string;
   children: ReactNode;
@@ -66,7 +67,7 @@ export function ScreenLayout({
             <BusFront size={20} color={colors.primary} />
             <Text style={styles.brandText}>Mi bus</Text>
           </View>
-          <Progress step={step} />
+          {step ? <Progress step={step} /> : null}
         </View>
         <View style={styles.titleBlock}>
           <Text style={styles.title}>{title}</Text>

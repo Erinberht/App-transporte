@@ -22,7 +22,18 @@
       "favicon": "./assets/favicon.png"
     },
     "scheme": "mibus",
-    "plugins": ["expo-router", "expo-font", "expo-splash-screen", "expo-asset"],
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-splash-screen",
+      "expo-asset",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Mi bus usa tu ubicación para sugerirte la parada y la ruta más cercanas. Tu ubicación se queda en tu teléfono."
+        }
+      ]
+    ],
     "experiments": {
       "typedRoutes": true
     }
