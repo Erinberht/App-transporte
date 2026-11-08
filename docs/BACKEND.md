@@ -66,15 +66,20 @@ Funciones (RPC):
 - `src/api/transit.ts`: `fetchTransitDataset`, `fetchRouteLiveStatus`, `ensureAnonymousSession` y `deleteMyData`.
 - `src/data/transitSync.ts`: al arrancar usa la copia guardada si es más nueva que las rutas incluidas. Después descarga el catálogo y lo guarda para el siguiente arranque, así las rutas no cambian con una pantalla abierta.
 
-## Proyecto en la nube (pendiente)
+## Proyecto en la nube
 
-1. Crear el proyecto en [supabase.com](https://supabase.com) en la región **São Paulo**.
-2. Activar **Anonymous sign-ins** en Authentication → Sign In / Providers y, antes del piloto público, CAPTCHA.
-3. Vincular y aplicar el esquema:
-   ```bash
-   npx supabase login
-   npx supabase link --project-ref <ref>
-   npx supabase db push
-   ```
-4. **Cargar rutas en la nube:** `npm run data:sql` genera `supabase/seed.sql`. Ejecútalo en el SQL Editor del panel o con `psql "<cadena de conexión>" -f supabase/seed.sql`. Es idempotente: se puede volver a correr al actualizar rutas.
-5. Copiar la URL y la **publishable key** (Settings → API Keys) a `.env.local` y a las variables de entorno de EAS (`preview` y `production`). La publishable key no es secreta; la **secret key** nunca va en la app.
+- Proyecto: **mi-bus-unicordoba**, región São Paulo. URL: `https://almafmszljkgkyjzrrrb.supabase.co`.
+- Inicio de sesión anónimo: activado. CAPTCHA: **pendiente** (activarlo antes del piloto público).
+- `EXPO_PUBLIC_SUPABASE_URL` y `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` están en `.env.local` y en EAS (`preview` y `production`, visibles: la publishable key es pública). La **secret key** y la contraseña de la base nunca van en la app ni en el repositorio.
+
+### Aplicar migraciones y rutas
+
+Por el pooler de sesión (la conexión directa `db.<ref>.supabase.co` solo funciona por IPv6):
+
+```bash
+npx supabase db push --include-seed --remote "postgresql://postgres.almafmszljkgkyjzrrrb:<contraseña>@aws-1-sa-east-1.pooler.supabase.com:5432/postgres"
+```
+
+- `--include-seed` también carga `supabase/seed.sql`, que es idempotente. Para actualizar solo las rutas: `npm run data:seed` (o `data:import`), luego `npm run data:sql` y el mismo comando.
+- Alternativa: `npx supabase login`, luego `npx supabase link --project-ref almafmszljkgkyjzrrrb` y `npx supabase db push --include-seed`.
+- Prueba rápida de que quedó bien: `npm run test:integration` apunta al local. Contra la nube, `curl -X POST https://almafmszljkgkyjzrrrb.supabase.co/rest/v1/rpc/get_transit_dataset -H "apikey: <publishable key>" -H "Content-Type: application/json" -d "{}"` debe devolver las 10 rutas.
