@@ -8,12 +8,14 @@ Este repositorio es la **base inicial**: el flujo de 5 pantallas del prototipo d
 
 | Paso | Pantalla (Figma)                                   | Ruta Expo Router             |
 | ---- | -------------------------------------------------- | ---------------------------- |
-| 1    | Elegir ruta                                        | `src/app/index.tsx`          |
+| —    | ¿A dónde vas? (ubicación, destino, hora de clase)  | `src/app/index.tsx`          |
+| 1    | Elegir ruta                                        | `src/app/elegir-ruta.tsx`    |
 | 2    | Bus en el mapa                                     | `src/app/bus-en-el-mapa.tsx` |
 | 3    | Compartir recorrido (QR opcional)                  | `src/app/compartir.tsx`      |
 | 4    | En viaje + reporte de cupo (lleno / medio / vacío) | `src/app/en-viaje.tsx`       |
 | 5    | Alerta de llegada                                  | `src/app/alerta-llegada.tsx` |
 
+- Pantalla inicial "¿A dónde vas?": pide permiso de ubicación con `expo-location` (solo en primer plano, después de explicar para qué se usa; se puede continuar sin ella), destino y hora de entrada a clase. Por ahora el único destino es la Universidad de Córdoba, sede Montería (campus principal). Los destinos viven en un solo lugar, `src/data/destinations.ts`: para agregar otros basta con añadirlos ahí.
 - Anuncios de muestra con marcas ficticias en `src/data/ads.ts`, mostrados con `AdBanner` (franja en el paso 1, tarjeta en el paso 5).
 - Mapa real de Montería con `react-native-maps` (`RouteMap.native.tsx`: Apple Maps en iOS, Google Maps en Android) con la ruta punteada, la parada del usuario y el bus. El recorrido y las coordenadas son de muestra (`src/data/geo.ts`).
 - Sin conexión, y en web, se muestra el mapa ilustrativo del Figma (`StaticRouteMap`) con el aviso "Sin conexión".

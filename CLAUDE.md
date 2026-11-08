@@ -25,4 +25,4 @@ App para estudiantes de la Universidad de Córdoba (Montería, Colombia) que ayu
 
 ## Estado actual
 
-Flujo de 5 pantallas con datos de muestra (`src/data`). Sin backend, sin GPS real. Mapa real con `react-native-maps` y recorrido de muestra (`src/data/geo.ts`); el mapa ilustrativo (`StaticRouteMap`) queda como respaldo sin conexión y en web.
+Pantalla inicial "¿A dónde vas?" (`src/app/index.tsx`) + flujo de 5 pantallas con datos de muestra (`src/data`). Sin backend. La ubicación del usuario (`src/location/useUserLocation.ts`, solo primer plano) se guarda en memoria como origen del viaje y no se envía a ningún lado. Destinos en `src/data/destinations.ts` (hoy solo Unicórdoba sede Montería; no agregar otras sedes hasta que se pida). Mapa real con `react-native-maps` y recorrido de muestra (`src/data/geo.ts`); el mapa ilustrativo (`StaticRouteMap`) queda como respaldo sin conexión y en web.
