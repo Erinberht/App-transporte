@@ -11,6 +11,7 @@ import { SAMPLE_ADS } from '../data/ads';
 import { getLiveStatus, OCCUPANCY_LABEL } from '../data/live';
 import { getRouteOrDefault } from '../data/repository';
 import { tripOptionFor, useRoutePlan } from '../planner/useRoutePlan';
+import { liveShare } from '../sharing/liveShare';
 import { useTrip } from '../state/trip';
 import { colors, fonts, fontSize, radius } from '../theme';
 
@@ -30,6 +31,7 @@ export default function ArrivalAlertScreen() {
       ctaLabel="Fin"
       onCta={() => {
         reset();
+        liveShare.reset();
         router.replace('/');
       }}
     >

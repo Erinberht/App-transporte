@@ -1,0 +1,260 @@
+import type { LatLng } from '../../data/geo';
+import type { LocationSample } from '../alighting';
+import { shareMessage } from '../messages';
+import {
+  createShareSession,
+  type LocationMode,
+  type LocationTracker,
+  type ShareBackend,
+  type StartOptions,
+} from '../shareSession';
+
+const PATH: LatLng[] = [
+  { latitude: 8.75, longitude: -75.89 },
+  { latitude: 8.75, longitude: -75.87 },
+];
+const OPTIONS: StartOptions = {
+  routeId: 'P3',
+  label: 'Ruta P3',
+  path: PATH,
+  alightStop: PATH[1],
+};
+const T0 = 1_800_000_000_000;
+
+/** Punto sobre la calle del recorrido, `m` metros al este del inicio. */
+const onRoute = (m: number): LatLng => ({
+  latitude: 8.75,
+  longitude: -75.89 + m / (111_195 * Math.cos((8.75 * Math.PI) / 180)),
+});
+
+function setup(permission: LocationMode | 'denied' | 'services_off' = 'background') {
+  let clock = T0;
+  let onSamples: ((s: LocationSample[]) => void) | null = null;
+  const tracker = {
+    requestPermission: jest.fn(async () => permission),
+    start: jest.fn(async (_mode: LocationMode, _label: string, cb) => {
+      onSamples = cb;
+    }),
+    stop: jest.fn(async () => {
+      onSamples = null;
+    }),
+  } satisfies LocationTracker;
+  const backend = {
+    startTrip: jest.fn(async () => 'trip-1'),
+    endTrip: jest.fn(async () => {}),
+    sendPosition: jest.fn(async () => {}),
+  } satisfies ShareBackend;
+  let hasBackend = true;
+  const session = createShareSession({
+    backend: () => (hasBackend ? backend : null),
+    tracker,
+    now: () => clock,
+  });
+
+  /** Avanza el reloj y entrega una lectura del GPS. */
+  async function gps(atMs: number, coordinate: LatLng, speedMps = 8, accuracy = 10) {
+    clock = T0 + atMs;
+    onSamples?.([{ timestamp: clock, coordinate, speedMps, accuracy }]);
+    await Promise.resolve();
+    await Promise.resolve();
+  }
+
+  return {
+    session,
+    tracker,
+    backend,
+    gps,
+    withoutBackend: () => (hasBackend = false),
+    get clock() {
+      return clock;
+    },
+  };
+}
+
+describe('createShareSession', () => {
+  it('pide permiso, crea el viaje anónimo y empieza el GPS en segundo plano', async () => {
+    const { session, tracker, backend } = setup('background');
+    await session.start(OPTIONS);
+
+    expect(tracker.requestPermission).toHaveBeenCalled();
+    expect(backend.startTrip).toHaveBeenCalledWith('P3');
+    expect(tracker.start).toHaveBeenCalledWith('background', 'Ruta P3', expect.any(Function));
+    expect(session.getStatus()).toMatchObject({
+      state: 'sharing',
+      tripId: 'trip-1',
+      mode: 'background',
+      lastSentAt: null,
+    });
+  });
+
+  it('envía la primera posición enseguida y luego como mucho cada 10 s si se movió 25 m', async () => {
+    const { session, backend, gps } = setup();
+    await session.start(OPTIONS);
+
+    await gps(0, onRoute(0));
+    expect(backend.sendPosition).toHaveBeenCalledTimes(1);
+    expect(session.getStatus()).toMatchObject({ lastSentAt: T0 });
+
+    await gps(5_000, onRoute(60)); // muy pronto
+    expect(backend.sendPosition).toHaveBeenCalledTimes(1);
+
+    await gps(12_000, onRoute(70)); // ya pasaron 10 s y se movió 70 m
+    expect(backend.sendPosition).toHaveBeenCalledTimes(2);
+
+    await gps(30_000, onRoute(80)); // solo 10 m más: no vale la pena
+    expect(backend.sendPosition).toHaveBeenCalledTimes(2);
+  });
+
+  it('en un trancón (quieto) igual envía una vez por minuto para no desaparecer del mapa', async () => {
+    const { session, backend, gps } = setup();
+    await session.start(OPTIONS);
+    await gps(0, onRoute(100), 0);
+    await gps(30_000, onRoute(100), 0);
+    expect(backend.sendPosition).toHaveBeenCalledTimes(1);
+    await gps(61_000, onRoute(100), 0);
+    expect(backend.sendPosition).toHaveBeenCalledTimes(2);
+  });
+
+  it('no envía lecturas imprecisas', async () => {
+    const { session, backend, gps } = setup();
+    await session.start(OPTIONS);
+    await gps(0, onRoute(0), 8, 400);
+    expect(backend.sendPosition).not.toHaveBeenCalled();
+  });
+
+  it('sin señal lo indica y se recupera con la siguiente lectura', async () => {
+    const { session, backend, gps } = setup();
+    await session.start(OPTIONS);
+    backend.sendPosition.mockRejectedValueOnce(new Error('Network request failed'));
+    await gps(0, onRoute(0));
+    expect(session.getStatus()).toMatchObject({ state: 'sharing', sendFailing: true });
+    expect(shareMessage(session.getStatus(), T0).title).toBe('Sin señal');
+
+    await gps(1_000, onRoute(10)); // tras un fallo se reintenta sin esperar
+    expect(session.getStatus()).toMatchObject({ sendFailing: false, lastSentAt: T0 + 1_000 });
+  });
+
+  it('"Dejar de compartir" apaga el GPS y cierra el viaje en el servidor', async () => {
+    const { session, tracker, backend } = setup();
+    await session.start(OPTIONS);
+    await session.stop();
+
+    expect(tracker.stop).toHaveBeenCalled();
+    expect(backend.endTrip).toHaveBeenCalledWith('trip-1', 'user');
+    expect(session.getStatus()).toEqual({ state: 'ended', routeId: 'P3', reason: 'user' });
+  });
+
+  it('se detiene solo al detectar que bajó del bus', async () => {
+    const { session, tracker, backend, gps } = setup();
+    await session.start(OPTIONS);
+    // Bajó: camina a 150 m del recorrido durante 2 minutos.
+    const away = { latitude: 8.7514, longitude: -75.88 };
+    for (let t = 0; t <= 120_000; t += 10_000) await gps(t, away, 1);
+
+    expect(session.getStatus()).toEqual({ state: 'ended', routeId: 'P3', reason: 'auto_alighted' });
+    expect(tracker.stop).toHaveBeenCalled();
+    expect(backend.endTrip).toHaveBeenCalledWith('trip-1', 'auto_alighted');
+    expect(shareMessage(session.getStatus(), 0).title).toBe('Bajaste del bus');
+  });
+
+  it('si el servidor ya cerró el viaje, solo apaga el GPS', async () => {
+    const { session, tracker, backend, gps } = setup();
+    await session.start(OPTIONS);
+    const closed = Object.assign(new Error('cerrado'), { name: 'TripClosedError' });
+    backend.sendPosition.mockRejectedValueOnce(closed);
+    await gps(0, onRoute(0));
+    await Promise.resolve();
+
+    expect(session.getStatus()).toMatchObject({ state: 'ended', reason: 'timeout' });
+    expect(tracker.stop).toHaveBeenCalled();
+    expect(backend.endTrip).not.toHaveBeenCalled();
+  });
+
+  it('solo con la app abierta si no dio permiso "todo el tiempo"', async () => {
+    const { session, tracker } = setup('foreground');
+    await session.start(OPTIONS);
+    expect(tracker.start).toHaveBeenCalledWith('foreground', 'Ruta P3', expect.any(Function));
+    expect(shareMessage(session.getStatus(), T0).body).toMatch(/Mantén la app abierta/);
+  });
+
+  it.each([
+    ['denied', 'permission'],
+    ['services_off', 'location_off'],
+  ] as const)('permiso %s: no crea viaje y explica el error', async (permission, error) => {
+    const { session, backend } = setup(permission);
+    await session.start(OPTIONS);
+    expect(backend.startTrip).not.toHaveBeenCalled();
+    expect(session.getStatus()).toEqual({ state: 'error', routeId: 'P3', error });
+  });
+
+  it('sin backend configurado no finge que comparte', async () => {
+    const t = setup();
+    t.withoutBackend();
+    await t.session.start(OPTIONS);
+    expect(t.tracker.requestPermission).not.toHaveBeenCalled();
+    expect(t.session.getStatus()).toMatchObject({ state: 'error', error: 'no_backend' });
+  });
+
+  it('sin conexión al empezar: error con opción de reintentar', async () => {
+    const { session, backend, tracker } = setup();
+    backend.startTrip.mockRejectedValueOnce(new Error('offline'));
+    await session.start(OPTIONS);
+    expect(session.getStatus()).toMatchObject({ state: 'error', error: 'network' });
+    expect(shareMessage(session.getStatus(), T0).action).toBe('retry');
+    expect(tracker.start).not.toHaveBeenCalled();
+
+    await session.retry();
+    expect(session.getStatus()).toMatchObject({ state: 'sharing' });
+  });
+
+  it('si el usuario detiene mientras se crea el viaje, el viaje se cierra', async () => {
+    const { session, backend, tracker } = setup();
+    let resolveTrip: (id: string) => void = () => {};
+    backend.startTrip.mockImplementationOnce(() => new Promise((r) => (resolveTrip = r)));
+    const starting = session.start(OPTIONS);
+    await Promise.resolve();
+    await session.stop();
+    resolveTrip('trip-tarde');
+    await starting;
+
+    expect(session.getStatus()).toMatchObject({ state: 'ended' });
+    expect(tracker.start).not.toHaveBeenCalled();
+    expect(backend.endTrip).toHaveBeenCalledWith('trip-tarde', 'user');
+  });
+
+  it('lecturas sin viaje activo (tras recargar la app) apagan el GPS', async () => {
+    const { session, tracker } = setup();
+    session.handleSamples([{ timestamp: T0, coordinate: onRoute(0), speedMps: 5, accuracy: 5 }]);
+    expect(tracker.stop).toHaveBeenCalled();
+  });
+
+  it('avisa a quien escucha y reset vuelve al inicio', async () => {
+    const { session } = setup();
+    const listener = jest.fn();
+    const unsubscribe = session.subscribe(listener);
+    await session.start(OPTIONS);
+    expect(listener).toHaveBeenCalled();
+    await session.reset();
+    expect(session.getStatus()).toEqual({ state: 'idle' });
+    unsubscribe();
+  });
+});
+
+describe('shareMessage', () => {
+  it('muestra hace cuánto fue el último envío', () => {
+    const status = {
+      state: 'sharing',
+      routeId: 'P3',
+      tripId: 't',
+      mode: 'background',
+      startedAt: 0,
+      lastSentAt: 1_000,
+      sendFailing: false,
+    } as const;
+    expect(shareMessage(status, 9_000).body).toBe('Último envío hace 8 s.');
+    expect(shareMessage(status, 181_000).body).toBe('Último envío hace 3 min.');
+    expect(shareMessage({ ...status, lastSentAt: null }, 0).body).toBe(
+      'Enviando tu primera ubicación…',
+    );
+  });
+});

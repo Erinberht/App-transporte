@@ -87,3 +87,101 @@ export async function deleteMyData(client: AppSupabaseClient): Promise<void> {
   if (error) throw new ApiError('No se pudieron borrar tus datos', error);
   await client.auth.signOut({ scope: 'local' });
 }
+
+export type TripEndReason = Database['public']['Enums']['trip_end_reason'];
+
+/** Código de Postgres cuando el viaje no existe, no es tuyo o ya terminó (ver la migración). */
+const TRIP_CLOSED = '42501';
+
+/** El servidor ya cerró el viaje (por ejemplo, por 10 minutos sin posiciones). */
+export class TripClosedError extends ApiError {
+  constructor(cause?: unknown) {
+    super('El viaje ya terminó en el servidor', cause);
+    this.name = 'TripClosedError';
+  }
+}
+
+/**
+ * Empieza un viaje compartido anónimo en una ruta y devuelve su id. Si quedó otro viaje
+ * abierto (la app se cerró sin terminarlo), lo cierra antes: solo puede haber uno activo.
+ */
+export async function startSharedTrip(client: AppSupabaseClient, routeId: string): Promise<string> {
+  await ensureAnonymousSession(client);
+  await client
+    .from('shared_trips')
+    .update({ ended_at: new Date().toISOString(), ended_reason: 'user' })
+    .is('ended_at', null);
+  const { data, error } = await client
+    .from('shared_trips')
+    .insert({ route_id: routeId })
+    .select('id')
+    .single();
+  if (error || !data) throw new ApiError('No se pudo empezar a compartir', error);
+  return data.id;
+}
+
+/** Termina el viaje. Si ya estaba cerrado no pasa nada. */
+export async function endSharedTrip(
+  client: AppSupabaseClient,
+  tripId: string,
+  reason: TripEndReason,
+): Promise<void> {
+  const { error } = await client
+    .from('shared_trips')
+    .update({ ended_at: new Date().toISOString(), ended_reason: reason })
+    .eq('id', tripId)
+    .is('ended_at', null);
+  if (error) throw new ApiError('No se pudo terminar el viaje', error);
+}
+
+export type TripPosition = {
+  latitude: number;
+  longitude: number;
+  recordedAt: Date;
+  speedMps: number | null;
+  accuracyM: number | null;
+};
+
+/** Envía una posición del viaje. Lanza TripClosedError si el servidor ya lo cerró. */
+export async function sendTripPosition(
+  client: AppSupabaseClient,
+  tripId: string,
+  position: TripPosition,
+): Promise<void> {
+  const speed = position.speedMps;
+  const { error } = await client.from('trip_positions').insert({
+    trip_id: tripId,
+    recorded_at: position.recordedAt.toISOString(),
+    location: `SRID=4326;POINT(${position.longitude} ${position.latitude})`,
+    speed_mps: speed !== null && speed >= 0 && speed <= 60 ? speed : null,
+    accuracy_m: position.accuracyM !== null && position.accuracyM >= 0 ? position.accuracyM : null,
+  });
+  if (!error) return;
+  if (error.code === TRIP_CLOSED) throw new TripClosedError(error);
+  throw new ApiError('No se pudo enviar la posición', error);
+}
+
+export type LiveBus = {
+  latitude: number;
+  longitude: number;
+  /** Cuántos viajeros comparten desde ese bus. */
+  travelers: number;
+  at: Date;
+};
+
+/** Buses en vivo de una ruta (uno por grupo de viajeros). No necesita sesión. */
+export async function fetchRouteLiveBuses(
+  client: AppSupabaseClient,
+  routeId: string,
+): Promise<LiveBus[]> {
+  const { data, error } = await client.rpc('route_live_buses', { p_route_id: routeId });
+  if (error) throw new ApiError('No se pudo consultar los buses en vivo', error);
+  return (data ?? [])
+    .filter((b) => typeof b.latitude === 'number' && typeof b.longitude === 'number')
+    .map((b) => ({
+      latitude: b.latitude,
+      longitude: b.longitude,
+      travelers: b.travelers,
+      at: new Date(b.position_at),
+    }));
+}

@@ -8,6 +8,7 @@ import ShareTripScreen from '../app/compartir';
 import ChooseRouteScreen from '../app/elegir-ruta';
 import InTripScreen from '../app/en-viaje';
 import WhereToScreen from '../app/index';
+import { liveShare } from '../sharing/liveShare';
 import { TripProvider } from '../state/trip';
 
 // Layout de prueba: igual al real pero sin esperar la carga de fuentes.
@@ -32,6 +33,9 @@ const routes = {
 const open = (initialUrl: string) => renderRouter(routes, { initialUrl });
 
 describe('Pantallas del flujo', () => {
+  // Compartir el recorrido es un estado global de la app: cada prueba empieza sin compartir.
+  beforeEach(() => liveShare.reset());
+
   it('0 · ¿A dónde vas?: destino único, hora de clase y continuar', async () => {
     await open('/');
 
@@ -101,7 +105,9 @@ describe('Pantallas del flujo', () => {
     await fireEvent.press(screen.getByText('Lleno'));
     expect(screen.getByText('Cupo lleno seleccionado')).toBeOnTheScreen();
 
-    await fireEvent.press(screen.getByText('Dejar de compartir'));
+    // Se abrió sin pulsar "Compartir": no hay nada que detener.
+    expect(screen.getByText('No estás compartiendo')).toBeOnTheScreen();
+    await fireEvent.press(screen.getByText('Continuar'));
     expect(screen).toHavePathname('/alerta-llegada');
   });
 
@@ -136,7 +142,9 @@ describe('Pantallas del flujo', () => {
     await fireEvent.press(screen.getByText('Ya subí'));
     await fireEvent.press(screen.getByText('Compartir'));
     await fireEvent.press(screen.getByText('Vacío'));
-    await fireEvent.press(screen.getByText('Dejar de compartir'));
+    // Las pruebas no tienen servidor: lo dice en vez de fingir que comparte.
+    expect(await screen.findByText('No se está compartiendo')).toBeOnTheScreen();
+    await fireEvent.press(screen.getByText('Continuar'));
 
     expect(screen.getByText('Cupo: vacío')).toBeOnTheScreen();
     expect(screen.getByText('Alerta de llegada · P1')).toBeOnTheScreen();

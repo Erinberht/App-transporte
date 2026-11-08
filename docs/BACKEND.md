@@ -47,7 +47,9 @@ Sin estas variables, la app funciona igual que antes, sin backend.
 Funciones (RPC):
 
 - `get_transit_dataset()`: todo el catálogo en el formato `TransitDataset` de la app.
-- `route_live_status(route_id)`: viajes activos, posición agregada del bus (centro de las últimas posiciones de los 2 últimos minutos, redondeada a unos 10 m) y cupo más reportado en los últimos 10 minutos. Es la base de las etapas 3.1 y 3.3.
+- `route_live_status(route_id)`: viajes activos, posición del bus más concurrido (redondeada a unos 10 m) y cupo más reportado en los últimos 10 minutos.
+- `route_live_buses(route_id)`: un bus por grupo de viajeros a menos de 300 m entre sí, con su posición y cuántos lo comparten (ver `docs/COMPARTIR.md`).
+- `close_stale_trips()`: solo interna; pg_cron la ejecuta cada 5 minutos y cierra los viajes con 10 minutos sin posiciones.
 - `delete_my_data()`: "Borrar mis datos". Elimina el usuario anónimo y, en cascada, su perfil, sus viajes, sus posiciones y sus reportes.
 - `purge_expired_data()`: solo interna, ejecutada por pg_cron todos los días a las 3:15 a. m. (hora de Colombia).
 

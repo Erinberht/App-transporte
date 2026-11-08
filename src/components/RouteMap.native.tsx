@@ -14,7 +14,14 @@ const USER_MARKER_WIDTH = 120;
 
 // Mapa real de Montería (react-native-maps: Apple Maps en iOS, Google Maps en Android).
 // Sin conexión se muestra el mapa ilustrativo, que no necesita descargar teselas.
-export function RouteMap({ height, busLabel, routeId, origin, boardStopId }: RouteMapProps) {
+export function RouteMap({
+  height,
+  busLabel,
+  routeId,
+  origin,
+  boardStopId,
+  liveBuses,
+}: RouteMapProps) {
   const network = useNetworkState();
   // Mientras el estado de red no se conoce (undefined) se asume que hay conexión.
   const offline = network.isConnected === false || network.isInternetReachable === false;
@@ -67,14 +74,21 @@ export function RouteMap({ height, busLabel, routeId, origin, boardStopId }: Rou
           </View>
         </Marker>
 
-        {busLabel ? (
-          <Marker coordinate={data.busPosition} anchor={{ x: 0.5, y: 0.5 }}>
-            <View style={styles.bus}>
-              <BusFront size={16} color={colors.onPrimary} />
-              <Text style={styles.busText}>{busLabel}</Text>
-            </View>
-          </Marker>
-        ) : null}
+        {busLabel
+          ? (liveBuses?.length ? liveBuses : [data.busPosition]).map((position, i) => (
+              <Marker
+                key={i}
+                coordinate={position}
+                anchor={{ x: 0.5, y: 0.5 }}
+                title={liveBuses?.length ? `Bus ${busLabel} en vivo` : undefined}
+              >
+                <View style={styles.bus}>
+                  <BusFront size={16} color={colors.onPrimary} />
+                  <Text style={styles.busText}>{busLabel}</Text>
+                </View>
+              </Marker>
+            ))
+          : null}
       </MapView>
 
       <Pressable

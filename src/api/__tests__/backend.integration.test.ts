@@ -10,9 +10,14 @@ import type { Database } from '../database.types';
 import type { AppSupabaseClient } from '../supabase';
 import {
   deleteMyData,
+  endSharedTrip,
   ensureAnonymousSession,
+  fetchRouteLiveBuses,
   fetchRouteLiveStatus,
   fetchTransitDataset,
+  sendTripPosition,
+  startSharedTrip,
+  TripClosedError,
 } from '../transit';
 
 function localConfig() {
@@ -82,5 +87,42 @@ describe('backend local', () => {
     await deleteMyData(client);
     const after = await fetchRouteLiveStatus(anon, 'S1');
     expect(after.activeTrips).toBe(0);
+  });
+
+  it('compartir en vivo: dos viajeros en el mismo bus se ven como un solo bus', async () => {
+    const a = newClient();
+    const b = newClient();
+    const anon = newClient();
+    const position = (latitude: number, longitude: number) => ({
+      latitude,
+      longitude,
+      recordedAt: new Date(),
+      speedMps: 6,
+      accuracyM: 10,
+    });
+
+    const tripA = await startSharedTrip(a, 'D1');
+    const tripB = await startSharedTrip(b, 'D1');
+    await sendTripPosition(a, tripA, position(8.76, -75.88));
+    await sendTripPosition(b, tripB, position(8.7602, -75.88));
+
+    const buses = await fetchRouteLiveBuses(anon, 'D1');
+    expect(buses).toEqual([
+      { latitude: 8.7601, longitude: -75.88, travelers: 2, at: expect.any(Date) },
+    ]);
+
+    // Volver a empezar cierra el viaje anterior (solo uno activo por persona).
+    const tripA2 = await startSharedTrip(a, 'D1');
+    expect(tripA2).not.toBe(tripA);
+    await expect(sendTripPosition(a, tripA, position(8.76, -75.88))).rejects.toBeInstanceOf(
+      TripClosedError,
+    );
+
+    await endSharedTrip(a, tripA2, 'auto_alighted');
+    await endSharedTrip(b, tripB, 'user');
+    expect(await fetchRouteLiveBuses(anon, 'D1')).toEqual([]);
+
+    await deleteMyData(a);
+    await deleteMyData(b);
   });
 });

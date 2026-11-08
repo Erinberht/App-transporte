@@ -32,7 +32,11 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Mi bus usa tu ubicación para sugerirte la parada y la ruta más cercanas. Tu ubicación se queda en tu teléfono."
+          "locationWhenInUsePermission": "Mi bus usa tu ubicación para sugerirte la parada y la ruta más cercanas y, si eliges compartir tu recorrido, para mostrar dónde va el bus. Solo se envía mientras compartes.",
+          "locationAlwaysAndWhenInUsePermission": "Si compartes tu recorrido, Mi bus sigue enviando tu ubicación anónima con la pantalla apagada, solo hasta que bajes del bus.",
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true,
+          "isIosBackgroundLocationEnabled": true
         }
       ],
       [

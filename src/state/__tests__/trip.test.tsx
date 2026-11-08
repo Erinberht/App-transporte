@@ -3,24 +3,21 @@ import { act, renderHook } from '@testing-library/react-native';
 import { TripProvider, useTrip } from '../trip';
 
 describe('TripProvider / useTrip', () => {
-  it('arranca con la ruta T2, cupo medio y sin compartir', async () => {
+  it('arranca con la ruta T2 y cupo medio', async () => {
     const { result } = await renderHook(() => useTrip(), { wrapper: TripProvider });
 
     expect(result.current.routeId).toBe('T2');
     expect(result.current.occupancy).toBe('medium');
-    expect(result.current.sharing).toBe(false);
   });
 
-  it('actualiza ruta, cupo y estado de compartir', async () => {
+  it('actualiza ruta y cupo', async () => {
     const { result } = await renderHook(() => useTrip(), { wrapper: TripProvider });
 
     await act(() => result.current.setRouteId('P1'));
     await act(() => result.current.setOccupancy('full'));
-    await act(() => result.current.setSharing(true));
 
     expect(result.current.routeId).toBe('P1');
     expect(result.current.occupancy).toBe('full');
-    expect(result.current.sharing).toBe(true);
   });
 
   it('reset vuelve a los valores iniciales', async () => {
@@ -29,13 +26,11 @@ describe('TripProvider / useTrip', () => {
     await act(() => {
       result.current.setRouteId('RG');
       result.current.setOccupancy('empty');
-      result.current.setSharing(true);
     });
     await act(() => result.current.reset());
 
     expect(result.current.routeId).toBe('T2');
     expect(result.current.occupancy).toBe('medium');
-    expect(result.current.sharing).toBe(false);
   });
 
   it('arranca con la sede Montería, entrada a las 7:00 y sin origen', async () => {

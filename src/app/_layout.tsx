@@ -12,6 +12,8 @@ import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { loadCachedDataset, refreshDataset } from '../data/transitSync';
+// Define la tarea de ubicación en segundo plano al cargar la app (expo-task-manager lo exige).
+import '../sharing/expoTracker';
 import { TripProvider } from '../state/trip';
 
 // Mantener el splash hasta que carguen las fuentes del diseño (Inter).

@@ -4,16 +4,18 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { RouteMap } from '../components/RouteMap';
 import { ScreenLayout } from '../components/ScreenLayout';
-import { getRouteOrDefault } from '../data/repository';
+import { getRouteOrDefault, routesRepository } from '../data/repository';
 import { tripOptionFor, useRoutePlan } from '../planner/useRoutePlan';
+import { liveShare } from '../sharing/liveShare';
 import { useTrip } from '../state/trip';
 import { colors, fonts, fontSize, lineHeight, radius } from '../theme';
 
 // Paso 3 de 5 · "Compartir recorrido"
 export default function ShareTripScreen() {
-  const { routeId, origin, setSharing } = useTrip();
+  const { routeId, origin } = useTrip();
   const route = getRouteOrDefault(routeId);
-  const boardStopId = tripOptionFor(useRoutePlan(), route.id)?.boardStop.id;
+  const option = tripOptionFor(useRoutePlan(), route.id);
+  const boardStopId = option?.boardStop.id;
 
   return (
     <ScreenLayout
@@ -24,8 +26,14 @@ export default function ShareTripScreen() {
       ctaLabel="Compartir"
       ctaIcon={Radio}
       onCta={() => {
-        // TODO: pedir permiso de ubicación (expo-location) y empezar a enviar posición anónima.
-        setSharing(true);
+        const stops = routesRepository.getPatternStops(route.id);
+        // Empieza en segundo plano: "En viaje" muestra el avance (permisos, conexión...).
+        liveShare.start({
+          routeId: route.id,
+          label: `Ruta ${route.shortName}`,
+          path: routesRepository.getPattern(route.id)?.shape ?? [],
+          alightStop: (option?.alightStop ?? stops[stops.length - 1])?.coordinate ?? null,
+        });
         router.push('/en-viaje');
       }}
       gap={18}
@@ -64,7 +72,8 @@ export default function ShareTripScreen() {
         <ShieldCheck size={19} color={colors.textMuted} />
         <Text style={styles.privacyText}>
           Solo durante tu viaje. Puedes dejar de compartir en cualquier momento; se detiene solo al
-          bajar.
+          bajar. Para seguir compartiendo con la pantalla apagada, elige «Permitir todo el tiempo»
+          cuando te pidamos la ubicación.
         </Text>
       </View>
     </ScreenLayout>
