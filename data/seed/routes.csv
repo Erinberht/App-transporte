@@ -1,0 +1,11 @@
+route_id,short_name,long_name,operator,color
+6M,6M,6 de Marzo,Metrosinú,#7C3AED
+AE,AE,Terminal - Aeropuerto,Metrosinú,#0891B2
+D1,D1,Dorado,Metrosinú,#CA8A04
+M1,M1,Mogambo 22,Metrosinú,#DB2777
+P1,P1,Pradera 27,Metrosinú,#235ED7
+P2,P2,Pradera Mercasur,Metrosinú,#2563EB
+P3,P3,Panzenú,Metrosinú,#059669
+RG,RG,Rancho Grande,Metrosinú,#DC2626
+S1,S1,Santander,Metrosinú,#EA580C
+T2,T2,Tambo,Metrosinú,#16A34A

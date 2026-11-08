@@ -52,10 +52,13 @@ describe('Pantallas del flujo', () => {
     await open('/elegir-ruta');
 
     expect(screen.getByText('Elige tu ruta')).toBeOnTheScreen();
-    expect(screen.getByText('4 rutas')).toBeOnTheScreen();
-    for (const name of ['P1', 'P2', 'T2', 'Rancho Grande']) {
+    expect(screen.getByText('10 rutas')).toBeOnTheScreen();
+    expect(screen.getAllByRole('radio')).toHaveLength(10);
+    for (const name of ['6M', 'AE', 'D1', 'M1', 'P1', 'P2', 'P3', 'RG', 'S1', 'T2']) {
       expect(screen.getByText(name)).toBeOnTheScreen();
     }
+    expect(screen.getByText('Rancho Grande')).toBeOnTheScreen();
+    expect(screen.getByText('Pradera 27')).toBeOnTheScreen();
     expect(screen.getByText('Ruta seleccionada')).toBeOnTheScreen();
     expect(screen.getByRole('radio', { selected: true })).toHaveTextContent(/T2/);
     expect(screen.getByText('Anuncio')).toBeOnTheScreen();
@@ -71,6 +74,7 @@ describe('Pantallas del flujo', () => {
     expect(screen.getByText('Llega en 5 min')).toBeOnTheScreen();
     expect(screen.getByText('Rancho Grande: sin reportes')).toBeOnTheScreen();
     expect(screen.getByText('En vivo')).toBeOnTheScreen();
+    expect(screen.getByText('Recorrido aproximado (datos de prueba)')).toBeOnTheScreen();
 
     await fireEvent.press(screen.getByText('Ya subí'));
     expect(screen).toHavePathname('/compartir');

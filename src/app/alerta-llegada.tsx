@@ -8,21 +8,22 @@ import { Button } from '../components/Button';
 import { RouteMap } from '../components/RouteMap';
 import { ScreenLayout } from '../components/ScreenLayout';
 import { SAMPLE_ADS } from '../data/ads';
-import { getRoute, OCCUPANCY_LABEL } from '../data/routes';
+import { getLiveStatus, OCCUPANCY_LABEL } from '../data/live';
+import { getRouteOrDefault } from '../data/repository';
 import { useTrip } from '../state/trip';
 import { colors, fonts, fontSize, radius } from '../theme';
 
 // Paso 5 de 5 · "Alerta de llegada"
 export default function ArrivalAlertScreen() {
-  const { routeId, occupancy, reset } = useTrip();
-  const route = getRoute(routeId);
+  const { routeId, origin, occupancy, reset } = useTrip();
+  const route = getRouteOrDefault(routeId);
   const [choice, setChoice] = useState<'wait' | 'search'>('wait');
 
   return (
     <ScreenLayout
       step={5}
       title="Tu bus está cerca"
-      subtitle={`Consulta la llegada y el cupo de la ruta ${route.name}.`}
+      subtitle={`Consulta la llegada y el cupo de la ruta ${route.shortName}.`}
       footerNote="Fin del recorrido. Gracias por compartir."
       ctaLabel="Fin"
       onCta={() => {
@@ -33,12 +34,14 @@ export default function ArrivalAlertScreen() {
       <View style={styles.alert}>
         <View style={styles.alertTop}>
           <BellRing size={20} color={colors.success} />
-          <Text style={styles.alertType}>Alerta de llegada · {route.name}</Text>
+          <Text style={styles.alertType}>Alerta de llegada · {route.shortName}</Text>
         </View>
-        <Text style={styles.alertMessage}>Tu bus llega en {route.etaMinutes} min</Text>
+        <Text style={styles.alertMessage}>
+          Tu bus llega en {getLiveStatus(route.id).etaMinutes} min
+        </Text>
       </View>
 
-      <RouteMap height={192} busLabel={route.name} />
+      <RouteMap height={192} busLabel={route.shortName} routeId={route.id} origin={origin} />
 
       <View style={styles.occupancy}>
         <Users size={24} color={colors.primary} />

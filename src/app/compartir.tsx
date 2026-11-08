@@ -4,19 +4,19 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { RouteMap } from '../components/RouteMap';
 import { ScreenLayout } from '../components/ScreenLayout';
-import { getRoute } from '../data/routes';
+import { getRouteOrDefault } from '../data/repository';
 import { useTrip } from '../state/trip';
 import { colors, fonts, fontSize, lineHeight, radius } from '../theme';
 
 // Paso 3 de 5 · "Compartir recorrido"
 export default function ShareTripScreen() {
-  const { routeId, setSharing } = useTrip();
-  const route = getRoute(routeId);
+  const { routeId, origin, setSharing } = useTrip();
+  const route = getRouteOrDefault(routeId);
 
   return (
     <ScreenLayout
       step={3}
-      title={`¿Subiste al bus ${route.name}?`}
+      title={`¿Subiste al bus ${route.shortName}?`}
       subtitle="Ayuda a quienes también esperan esta ruta."
       footerNote="Comparte tu recorrido, no tu identidad."
       ctaLabel="Compartir"
@@ -28,7 +28,7 @@ export default function ShareTripScreen() {
       }}
       gap={18}
     >
-      <RouteMap height={158} busLabel={route.name} />
+      <RouteMap height={158} busLabel={route.shortName} routeId={route.id} origin={origin} />
 
       <View style={styles.shareCard}>
         <View style={styles.shareTop}>
@@ -38,7 +38,7 @@ export default function ShareTripScreen() {
           <Text style={styles.shareTitle}>Compartir mi recorrido</Text>
         </View>
         <Text style={styles.shareBody}>
-          Tu ubicación en vivo permite mostrar dónde va el bus {route.name}.
+          Tu ubicación en vivo permite mostrar dónde va el bus {route.shortName}.
         </Text>
       </View>
 
