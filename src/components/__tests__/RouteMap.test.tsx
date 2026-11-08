@@ -31,6 +31,12 @@ describe('RouteMap', () => {
     expect(longitude).toBeCloseTo(-75.87, 1);
   });
 
+  it('usa siempre el estilo claro aunque el teléfono esté en modo oscuro', async () => {
+    await render(<RouteMap height={200} />);
+
+    expect(screen.getByTestId('map-view').props.userInterfaceStyle).toBe('light');
+  });
+
   it('sin bus (busLabel vacío) no muestra el marcador del bus', async () => {
     await render(<RouteMap height={200} />);
 
