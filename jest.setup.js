@@ -56,3 +56,19 @@ jest.mock('@react-native-community/datetimepicker', () => {
     DateTimePickerAndroid: { open: jest.fn(), dismiss: jest.fn() },
   };
 });
+
+// expo-sqlite: almacenamiento clave-valor en memoria y shim de localStorage sin efecto.
+jest.mock('expo-sqlite/localStorage/install', () => ({}));
+jest.mock('expo-sqlite/kv-store', () => {
+  const data = new Map();
+  const storage = {
+    getItemSync: jest.fn((key) => (data.has(key) ? data.get(key) : null)),
+    setItemSync: jest.fn((key, value) => void data.set(key, value)),
+    removeItemSync: jest.fn((key) => data.delete(key)),
+    getItemAsync: jest.fn(async (key) => (data.has(key) ? data.get(key) : null)),
+    setItemAsync: jest.fn(async (key, value) => void data.set(key, value)),
+    removeItemAsync: jest.fn(async (key) => data.delete(key)),
+    clearSync: jest.fn(() => data.clear()),
+  };
+  return { __esModule: true, default: storage };
+});
