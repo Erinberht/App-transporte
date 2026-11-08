@@ -1,7 +1,9 @@
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { StyleSheet, Text, View } from 'react-native';
+import { BusFront, LocateFixed } from 'lucide-react-native';
+import { useState } from 'react';
+import { StyleSheet, Text, View, type DimensionValue } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 
-import { colors } from '../theme';
+import { colors, fonts, fontSize, radius } from '../theme';
 
 type Props = {
   height: number;
@@ -9,122 +11,162 @@ type Props = {
   busLabel?: string;
 };
 
-// Mapa ilustrativo hecho con Views, igual al del prototipo. Reemplazar por un mapa real
-// (react-native-maps / MapLibre) cuando se conecte el GPS de las busetas.
-function Dotted({
-  direction,
-  left,
-  top,
-  size,
-}: {
-  direction: 'h' | 'v';
-  left: `${number}%`;
-  top: `${number}%`;
-  size: `${number}%`;
-}) {
-  const horizontal = direction === 'h';
-  const count = horizontal ? 14 : 7;
-  return (
-    <View
-      style={[
-        styles.dotted,
-        horizontal
-          ? { left, top, width: size, flexDirection: 'row' }
-          : { left, top, height: size, flexDirection: 'column' },
-      ]}
-    >
-      {Array.from({ length: count }, (_, i) => (
-        <View key={i} style={styles.routeDot} />
-      ))}
-    </View>
-  );
+// Mapa ilustrativo hecho con Views, igual al del prototipo de Figma ("Mapa de la ruta").
+// Las medidas salen del diseño: ancho de referencia 362 px y posiciones verticales
+// proporcionales a la altura del mapa (que cambia en cada pantalla).
+const DESIGN_WIDTH = 362;
+/** Centros verticales de las tres avenidas, como fracción de la altura. */
+const AVENUES = [0.26, 0.6, 0.94];
+/** Centros horizontales de las tres calles (px en el diseño). */
+const STREETS = [90, 230, 322];
+const BLOCKS = [
+  { x: 111, w: 96, top: null, h: 0.16 },
+  { x: 111, w: 96, top: 0.34, h: 0.19 },
+  { x: 251, w: 55, top: 0.34, h: 0.19 },
+  { x: 111, w: 96, top: 0.71, h: 0.18 },
+] as const;
+const USER = { x: 90, y: 0.85 };
+const BUS = { x: 203, y: 0.43 };
+
+function pctX(x: number): DimensionValue {
+  return `${(x / DESIGN_WIDTH) * 100}%`;
 }
 
-function pct(n: number): `${number}%` {
-  return `${n}%`;
+/** Polilínea con esquinas redondeadas (radio r). */
+function roundedPath(points: [number, number][], r = 8): string {
+  let d = `M${points[0][0]},${points[0][1]}`;
+  for (let i = 1; i < points.length - 1; i++) {
+    const [px, py] = points[i - 1];
+    const [cx, cy] = points[i];
+    const [nx, ny] = points[i + 1];
+    const inLen = Math.hypot(cx - px, cy - py);
+    const outLen = Math.hypot(nx - cx, ny - cy);
+    const rr = Math.min(r, inLen / 2, outLen / 2);
+    const ax = cx - ((cx - px) / inLen) * rr;
+    const ay = cy - ((cy - py) / inLen) * rr;
+    const bx = cx + ((nx - cx) / outLen) * rr;
+    const by = cy + ((ny - cy) / outLen) * rr;
+    d += ` L${ax},${ay} Q${cx},${cy} ${bx},${by}`;
+  }
+  const [lx, ly] = points[points.length - 1];
+  return `${d} L${lx},${ly}`;
 }
 
 export function RouteMap({ height, busLabel }: Props) {
-  return (
-    <View style={[styles.map, { height }]}>
-      <View style={styles.river} />
-      <View style={[styles.block, styles.park]} />
-      <Text style={[styles.label, { left: '5%', top: '44%' }]}>Parque</Text>
+  const [width, setWidth] = useState(DESIGN_WIDTH);
+  const sx = width / DESIGN_WIDTH;
+  const y = (f: number) => f * height;
 
-      {[
-        { left: 31, top: 7, width: 26, height: 16 },
-        { left: 31, top: 34, width: 26, height: 19 },
-        { left: 69, top: 34, width: 15, height: 19 },
-        { left: 31, top: 71, width: 26, height: 18 },
-      ].map((b, i) => (
+  // Recorrido: parada del usuario -> avenida central -> segunda calle -> avenida superior -> destino.
+  const route = roundedPath([
+    [USER.x * sx, y(USER.y)],
+    [USER.x * sx, y(AVENUES[1])],
+    [STREETS[1] * sx, y(AVENUES[1])],
+    [STREETS[1] * sx, y(AVENUES[0])],
+    [STREETS[2] * sx, y(AVENUES[0])],
+  ]);
+
+  return (
+    <View
+      style={[styles.map, { height }]}
+      onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
+      accessibilityLabel="Mapa del recorrido de la ruta"
+    >
+      <View
+        style={[
+          styles.river,
+          { height: height + 50, right: 0.104 * height - 32 },
+        ]}
+      />
+
+      <View
+        style={[styles.park, { left: pctX(15), width: pctX(61), top: y(0.34), height: y(0.23) }]}
+      >
+        {height >= 180 ? <Text style={styles.parkLabel}>Parque</Text> : null}
+      </View>
+
+      {BLOCKS.map((b, i) => (
         <View
           key={i}
           style={[
             styles.block,
-            { left: pct(b.left), top: pct(b.top), width: pct(b.width), height: pct(b.height) },
+            { left: pctX(b.x), width: pctX(b.w), top: b.top === null ? 13 : y(b.top), height: y(b.h) },
           ]}
         />
       ))}
 
-      {[23, 61.6, 87].map((x) => (
-        <View key={x} style={[styles.street, { left: pct(x), width: 14, top: 0, bottom: 0 }]} />
+      {STREETS.map((x) => (
+        <View key={x} style={[styles.street, { left: pctX(x - 7), width: 14, top: 0, bottom: 0 }]} />
       ))}
-      {[22, 56, 90].map((y) => (
-        <View key={y} style={[styles.street, { top: pct(y), height: 16, left: 0, right: 0 }]} />
+      {AVENUES.map((f) => (
+        <View key={f} style={[styles.street, { top: y(f) - 8, height: 16, left: 0, right: 0 }]} />
       ))}
-      <Text style={[styles.label, { left: '33%', top: '14%' }]}>Av. Principal</Text>
+      <Text style={[styles.label, { left: pctX(122), top: y(AVENUES[0]) - 20 }]}>Av. Principal</Text>
 
-      {/* Recorrido punteado: parada del usuario -> destino */}
-      <Dotted direction="v" left="24.8%" top="60%" size="24%" />
-      <Dotted direction="h" left="24.8%" top="59.5%" size="39%" />
-      <Dotted direction="v" left="63.2%" top="26%" size="34%" />
-      <Dotted direction="h" left="63.2%" top="25.5%" size="26%" />
-      <View style={[styles.stop, { left: '88%', top: '22%' }]} />
+      <Svg style={StyleSheet.absoluteFill} pointerEvents="none">
+        <Path
+          d={route}
+          stroke={colors.route}
+          strokeWidth={3}
+          strokeDasharray="0.1 6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill="none"
+        />
+      </Svg>
+      <View style={[styles.stop, { left: STREETS[2] * sx - 5, top: y(AVENUES[0]) - 5 }]} />
 
       {busLabel ? (
-        <View style={[styles.bus, { left: '56%', top: '34%' }]}>
-          <MaterialCommunityIcons name="bus" size={16} color="#FFFFFF" />
+        <View style={[styles.bus, { left: pctX(BUS.x), top: y(BUS.y) - 17 }]}>
+          <BusFront size={16} color={colors.onPrimary} />
           <Text style={styles.busText}>{busLabel}</Text>
         </View>
       ) : null}
 
-      <View style={[styles.userHalo, { left: '25%', top: '84%' }]} />
-      <View style={[styles.userDot, { left: '25%', top: '84%' }]} />
-      <View style={[styles.stopLabel, { left: '31%', top: '81%' }]}>
+      <View style={[styles.userHalo, { left: USER.x * sx - 18, top: y(USER.y) - 18 }]} />
+      <View style={[styles.userDot, { left: USER.x * sx - 7, top: y(USER.y) - 7 }]} />
+      <View style={[styles.stopLabel, { left: pctX(108), top: y(USER.y) - 11 }]}>
         <Text style={styles.stopLabelText}>Tu parada</Text>
       </View>
 
       <View style={styles.locate}>
-        <MaterialCommunityIcons name="crosshairs-gps" size={18} color={colors.primary} />
+        <LocateFixed size={18} color={colors.primary} />
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  map: { borderRadius: 20, overflow: 'hidden', backgroundColor: colors.mapBase },
+  map: { borderRadius: radius.lg, overflow: 'hidden', backgroundColor: colors.mapBase },
   river: {
     position: 'absolute',
-    right: -34,
-    top: -30,
-    width: 90,
-    bottom: -30,
+    top: -25,
+    width: 55,
     backgroundColor: colors.mapRiver,
-    borderRadius: 40,
-    transform: [{ rotate: '6deg' }],
+    transform: [{ rotate: '12deg' }],
   },
-  block: { position: 'absolute', backgroundColor: colors.mapBlock, borderRadius: 6 },
-  park: { left: '4%', top: '34%', width: '17%', height: '23%', backgroundColor: colors.mapPark },
+  block: { position: 'absolute', backgroundColor: colors.mapBlock, borderRadius: radius.xs },
+  park: {
+    position: 'absolute',
+    borderRadius: radius.sm,
+    backgroundColor: colors.mapPark,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  parkLabel: { fontFamily: fonts.regular, fontSize: fontSize.mapLabel, color: colors.success },
   street: { position: 'absolute', backgroundColor: colors.mapStreet },
-  label: { position: 'absolute', fontSize: 9, color: colors.textMuted },
-  dotted: { position: 'absolute', justifyContent: 'space-between', overflow: 'hidden' },
-  routeDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: colors.route },
+  label: {
+    position: 'absolute',
+    fontFamily: fonts.regular,
+    fontSize: fontSize.mapLabel,
+    color: colors.textMuted,
+  },
   stop: {
     position: 'absolute',
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     borderWidth: 2,
     borderColor: colors.route,
   },
@@ -133,50 +175,44 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
+    height: 34,
     paddingHorizontal: 9,
-    paddingVertical: 9,
-    borderRadius: 10,
+    borderRadius: radius.sm,
     backgroundColor: colors.success,
   },
-  busText: { color: '#FFFFFF', fontWeight: '700', fontSize: 13 },
+  busText: { color: colors.onPrimary, fontFamily: fonts.bold, fontSize: fontSize.small },
   userHalo: {
     position: 'absolute',
     width: 36,
     height: 36,
     borderRadius: 18,
-    marginLeft: -18,
-    marginTop: -18,
-    backgroundColor: 'rgba(35, 96, 217, 0.15)',
+    backgroundColor: 'rgba(35, 94, 215, 0.15)',
   },
   userDot: {
     position: 'absolute',
     width: 14,
     height: 14,
     borderRadius: 7,
-    marginLeft: -7,
-    marginTop: -7,
     backgroundColor: colors.primary,
     borderWidth: 2,
-    borderColor: '#FFFFFF',
+    borderColor: colors.surface,
   },
   stopLabel: {
     position: 'absolute',
-    marginTop: -11,
     paddingHorizontal: 8,
-    height: 22,
-    justifyContent: 'center',
-    borderRadius: 8,
-    backgroundColor: '#FFFFFF',
+    paddingVertical: 5,
+    borderRadius: radius.chip,
+    backgroundColor: colors.surface,
   },
-  stopLabelText: { fontSize: 10, fontWeight: '600', color: colors.text },
+  stopLabelText: { fontFamily: fonts.semibold, fontSize: fontSize.tiny, color: colors.text },
   locate: {
     position: 'absolute',
     right: 12,
-    bottom: 12,
+    bottom: 13,
     width: 34,
     height: 34,
-    borderRadius: 10,
-    backgroundColor: '#FFFFFF',
+    borderRadius: radius.sm,
+    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { colors } from '../theme';
+import { colors, fonts, fontSize, radius } from '../theme';
 
 export function LiveBadge() {
   return (
@@ -17,10 +17,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     paddingHorizontal: 9,
-    paddingVertical: 4,
-    borderRadius: 999,
+    paddingVertical: 5,
+    borderRadius: radius.pill,
     backgroundColor: colors.successSoft,
   },
   dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.success },
-  text: { fontSize: 11, fontWeight: '600', color: colors.success },
+  text: { fontFamily: fonts.semibold, fontSize: fontSize.caption, color: colors.success },
 });
