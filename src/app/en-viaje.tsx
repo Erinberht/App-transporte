@@ -12,7 +12,8 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { LiveBadge } from '../components/LiveBadge';
 import { RouteMap } from '../components/RouteMap';
 import { ScreenLayout } from '../components/ScreenLayout';
-import { getRoute, OCCUPANCY_LABEL } from '../data/routes';
+import { OCCUPANCY_LABEL } from '../data/live';
+import { getRouteOrDefault } from '../data/repository';
 import { useTrip } from '../state/trip';
 import { colors, fonts, fontSize, lineHeight, radius } from '../theme';
 import type { Occupancy } from '../types';
@@ -25,14 +26,14 @@ const OPTIONS: { value: Occupancy; icon: LucideIcon }[] = [
 
 // Paso 4 de 5 · "En viaje"
 export default function InTripScreen() {
-  const { routeId, occupancy, setOccupancy, setSharing } = useTrip();
-  const route = getRoute(routeId);
+  const { routeId, origin, occupancy, setOccupancy, setSharing } = useTrip();
+  const route = getRouteOrDefault(routeId);
 
   return (
     <ScreenLayout
       step={4}
       title="Estás en viaje"
-      subtitle={`Ruta ${route.name} · Tu recorrido ayuda a otros viajeros.`}
+      subtitle={`Ruta ${route.shortName} · Tu recorrido ayuda a otros viajeros.`}
       ctaLabel="Dejar de compartir"
       ctaIcon={Square}
       onCta={() => {
@@ -46,7 +47,7 @@ export default function InTripScreen() {
           <Text style={styles.liveTitle}>Compartiendo tu recorrido en vivo</Text>
           <LiveBadge />
         </View>
-        <RouteMap height={228} busLabel={route.name} />
+        <RouteMap height={228} busLabel={route.shortName} routeId={route.id} origin={origin} />
       </View>
 
       <View style={styles.card}>

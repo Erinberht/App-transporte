@@ -1,0 +1,1604 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "kind": "seed",
+    "description": "Datos FICTICIOS para desarrollo: códigos y nombres de rutas reales de Metrosinú, pero paradas, recorridos y horarios inventados. No usar para viajar.",
+    "generatedAt": "2026-11-08T19:43:37.731Z"
+  },
+  "stops": [
+    {
+      "id": "unicordoba",
+      "name": "Unicórdoba (vía a Cereté)",
+      "coordinate": {
+        "latitude": 8.7895,
+        "longitude": -75.8605
+      }
+    },
+    {
+      "id": "corr-calle29",
+      "name": "Av. Circunvalar · Calle 29",
+      "coordinate": {
+        "latitude": 8.76,
+        "longitude": -75.872
+      }
+    },
+    {
+      "id": "corr-calle44",
+      "name": "Carrera 6 · Calle 44",
+      "coordinate": {
+        "latitude": 8.77,
+        "longitude": -75.87
+      }
+    },
+    {
+      "id": "corr-calle62",
+      "name": "Carrera 6 · Calle 62",
+      "coordinate": {
+        "latitude": 8.78,
+        "longitude": -75.866
+      }
+    },
+    {
+      "id": "corr-calle72",
+      "name": "Carrera 6 · Calle 72",
+      "coordinate": {
+        "latitude": 8.786,
+        "longitude": -75.863
+      }
+    },
+    {
+      "id": "pradera",
+      "name": "La Pradera",
+      "coordinate": {
+        "latitude": 8.742,
+        "longitude": -75.869
+      }
+    },
+    {
+      "id": "calle22-cra25",
+      "name": "Calle 22 · Carrera 25",
+      "coordinate": {
+        "latitude": 8.748,
+        "longitude": -75.87
+      }
+    },
+    {
+      "id": "mercasur",
+      "name": "Mercasur",
+      "coordinate": {
+        "latitude": 8.738,
+        "longitude": -75.876
+      }
+    },
+    {
+      "id": "tambo",
+      "name": "El Tambo",
+      "coordinate": {
+        "latitude": 8.752,
+        "longitude": -75.854
+      }
+    },
+    {
+      "id": "calle29-cra14",
+      "name": "Calle 29 · Carrera 14",
+      "coordinate": {
+        "latitude": 8.757,
+        "longitude": -75.864
+      }
+    },
+    {
+      "id": "rancho-grande",
+      "name": "Rancho Grande",
+      "coordinate": {
+        "latitude": 8.733,
+        "longitude": -75.856
+      }
+    },
+    {
+      "id": "seis-de-marzo",
+      "name": "6 de Marzo",
+      "coordinate": {
+        "latitude": 8.741,
+        "longitude": -75.858
+      }
+    },
+    {
+      "id": "calle22-cra14",
+      "name": "Calle 22 · Carrera 14",
+      "coordinate": {
+        "latitude": 8.749,
+        "longitude": -75.864
+      }
+    },
+    {
+      "id": "santander",
+      "name": "Santander",
+      "coordinate": {
+        "latitude": 8.75,
+        "longitude": -75.866
+      }
+    },
+    {
+      "id": "dorado",
+      "name": "El Dorado",
+      "coordinate": {
+        "latitude": 8.745,
+        "longitude": -75.878
+      }
+    },
+    {
+      "id": "mogambo",
+      "name": "Mogambo",
+      "coordinate": {
+        "latitude": 8.736,
+        "longitude": -75.882
+      }
+    },
+    {
+      "id": "panzenu",
+      "name": "Panzenú",
+      "coordinate": {
+        "latitude": 8.74,
+        "longitude": -75.883
+      }
+    },
+    {
+      "id": "calle22-cra6",
+      "name": "Calle 22 · Carrera 6",
+      "coordinate": {
+        "latitude": 8.75,
+        "longitude": -75.88
+      }
+    },
+    {
+      "id": "centro-cra4",
+      "name": "Centro · Carrera 4 · Calle 30",
+      "coordinate": {
+        "latitude": 8.76,
+        "longitude": -75.882
+      }
+    },
+    {
+      "id": "cra4-calle44",
+      "name": "Carrera 4 · Calle 44",
+      "coordinate": {
+        "latitude": 8.77,
+        "longitude": -75.879
+      }
+    },
+    {
+      "id": "terminal",
+      "name": "Terminal de Transportes",
+      "coordinate": {
+        "latitude": 8.739,
+        "longitude": -75.873
+      }
+    },
+    {
+      "id": "upb",
+      "name": "UPB (vía a Cereté)",
+      "coordinate": {
+        "latitude": 8.809,
+        "longitude": -75.848
+      }
+    },
+    {
+      "id": "aeropuerto",
+      "name": "Aeropuerto Los Garzones",
+      "coordinate": {
+        "latitude": 8.8236,
+        "longitude": -75.8258
+      }
+    }
+  ],
+  "routes": [
+    {
+      "id": "6M",
+      "shortName": "6M",
+      "longName": "6 de Marzo",
+      "operator": "Metrosinú",
+      "color": "#7C3AED",
+      "patterns": [
+        {
+          "id": "6M-0",
+          "direction": 0,
+          "headsign": "Unicórdoba",
+          "quality": "ficticio",
+          "stops": [
+            {
+              "stopId": "seis-de-marzo",
+              "minutesFromStart": 0
+            },
+            {
+              "stopId": "calle22-cra14",
+              "minutesFromStart": 4
+            },
+            {
+              "stopId": "corr-calle29",
+              "minutesFromStart": 9
+            },
+            {
+              "stopId": "corr-calle44",
+              "minutesFromStart": 13
+            },
+            {
+              "stopId": "corr-calle62",
+              "minutesFromStart": 18
+            },
+            {
+              "stopId": "corr-calle72",
+              "minutesFromStart": 21
+            },
+            {
+              "stopId": "unicordoba",
+              "minutesFromStart": 23
+            }
+          ],
+          "shape": [
+            {
+              "latitude": 8.741,
+              "longitude": -75.858
+            },
+            {
+              "latitude": 8.749,
+              "longitude": -75.864
+            },
+            {
+              "latitude": 8.76,
+              "longitude": -75.872
+            },
+            {
+              "latitude": 8.77,
+              "longitude": -75.87
+            },
+            {
+              "latitude": 8.78,
+              "longitude": -75.866
+            },
+            {
+              "latitude": 8.786,
+              "longitude": -75.863
+            },
+            {
+              "latitude": 8.7895,
+              "longitude": -75.8605
+            }
+          ]
+        }
+      ],
+      "service": [
+        {
+          "days": "weekday",
+          "quality": "ficticio",
+          "headways": [
+            {
+              "from": "05:00",
+              "to": "06:00",
+              "everyMinutes": 12
+            },
+            {
+              "from": "06:00",
+              "to": "08:00",
+              "everyMinutes": 8
+            },
+            {
+              "from": "08:00",
+              "to": "11:30",
+              "everyMinutes": 12
+            },
+            {
+              "from": "11:30",
+              "to": "14:00",
+              "everyMinutes": 10
+            },
+            {
+              "from": "14:00",
+              "to": "17:00",
+              "everyMinutes": 12
+            },
+            {
+              "from": "17:00",
+              "to": "19:30",
+              "everyMinutes": 8
+            },
+            {
+              "from": "19:30",
+              "to": "23:00",
+              "everyMinutes": 15
+            }
+          ]
+        },
+        {
+          "days": "saturday",
+          "quality": "ficticio",
+          "headways": [
+            {
+              "from": "06:00",
+              "to": "22:00",
+              "everyMinutes": 15
+            }
+          ]
+        },
+        {
+          "days": "sunday_holiday",
+          "quality": "ficticio",
+          "headways": [
+            {
+              "from": "07:00",
+              "to": "21:00",
+              "everyMinutes": 20
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AE",
+      "shortName": "AE",
+      "longName": "Terminal - Aeropuerto",
+      "operator": "Metrosinú",
+      "color": "#0891B2",
+      "patterns": [
+        {
+          "id": "AE-0",
+          "direction": 0,
+          "headsign": "Aeropuerto",
+          "quality": "ficticio",
+          "stops": [
+            {
+              "stopId": "terminal",
+              "minutesFromStart": 0
+            },
+            {
+              "stopId": "corr-calle29",
+              "minutesFromStart": 8
+            },
+            {
+              "stopId": "corr-calle44",
+              "minutesFromStart": 12
+            },
+            {
+              "stopId": "corr-calle62",
+              "minutesFromStart": 17
+            },
+            {
+              "stopId": "corr-calle72",
+              "minutesFromStart": 20
+            },
+            {
+              "stopId": "unicordoba",
+              "minutesFromStart": 22
+            },
+            {
+              "stopId": "upb",
+              "minutesFromStart": 31
+            },
+            {
+              "stopId": "aeropuerto",
+              "minutesFromStart": 41
+            }
+          ],
+          "shape": [
+            {
+              "latitude": 8.739,
+              "longitude": -75.873
+            },
+            {
+              "latitude": 8.76,
+              "longitude": -75.872
+            },
+            {
+              "latitude": 8.77,
+              "longitude": -75.87
+            },
+            {
+              "latitude": 8.78,
+              "longitude": -75.866
+            },
+            {
+              "latitude": 8.786,
+              "longitude": -75.863
+            },
+            {
+              "latitude": 8.7895,
+              "longitude": -75.8605
+            },
+            {
+              "latitude": 8.809,
+              "longitude": -75.848
+            },
+            {
+              "latitude": 8.8236,
+              "longitude": -75.8258
+            }
+          ]
+        }
+      ],
+      "service": [
+        {
+          "days": "weekday",
+          "quality": "ficticio",
+          "headways": [
+            {
+              "from": "05:00",
+              "to": "06:00",
+              "everyMinutes": 20
+            },
+            {
+              "from": "06:00",
+              "to": "08:00",
+              "everyMinutes": 20
+            },
+            {
+              "from": "08:00",
+              "to": "11:30",
+              "everyMinutes": 20
+            },
+            {
+              "from": "11:30",
+              "to": "14:00",
+              "everyMinutes": 20
+            },
+            {
+              "from": "14:00",
+              "to": "17:00",
+              "everyMinutes": 20
+            },
+            {
+              "from": "17:00",
+              "to": "19:30",
+              "everyMinutes": 20
+            },
+            {
+              "from": "19:30",
+              "to": "23:00",
+              "everyMinutes": 20
+            }
+          ]
+        },
+        {
+          "days": "saturday",
+          "quality": "ficticio",
+          "headways": [
+            {
+              "from": "06:00",
+              "to": "22:00",
+              "everyMinutes": 20
+            }
+          ]
+        },
+        {
+          "days": "sunday_holiday",
+          "quality": "ficticio",
+          "headways": [
+            {
+              "from": "07:00",
+              "to": "21:00",
+              "everyMinutes": 20
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "D1",
+      "shortName": "D1",
+      "longName": "Dorado",
+      "operator": "Metrosinú",
+      "color": "#CA8A04",
+      "patterns": [
+        {
+          "id": "D1-0",
+          "direction": 0,
+          "headsign": "Unicórdoba",
+          "quality": "ficticio",
+          "stops": [
+            {
+              "stopId": "dorado",
+              "minutesFromStart": 0
+            },
+            {
+              "stopId": "calle22-cra25",
+              "minutesFromStart": 3
+            },
+            {
+              "stopId": "corr-calle29",
+              "minutesFromStart": 8
+            },
+            {
+              "stopId": "corr-calle44",
+              "minutesFromStart": 12
+            },
+            {
+              "stopId": "corr-calle62",
+              "minutesFromStart": 17
+            },
+            {
+              "stopId": "corr-calle72",
+              "minutesFromStart": 20
+            },
+            {
+              "stopId": "unicordoba",
+              "minutesFromStart": 22
+            }
+          ],
+          "shape": [
+            {
+              "latitude": 8.745,
+              "longitude": -75.878
+            },
+            {
+              "latitude": 8.748,
+              "longitude": -75.87
+            },
+            {
+              "latitude": 8.76,
+              "longitude": -75.872
+            },
+            {
+              "latitude": 8.77,
+              "longitude": -75.87
+            },
+            {
+              "latitude": 8.78,
+              "longitude": -75.866
+            },
+            {
+              "latitude": 8.786,
+              "longitude": -75.863
+            },
+            {
+              "latitude": 8.7895,
+              "longitude": -75.8605
+            }
+          ]
+        }
+      ],
+      "service": [
+        {
+          "days": "weekday",
+          "quality": "ficticio",
+          "headways": [
+            {
+              "from": "05:00",
+              "to": "06:00",
+              "everyMinutes": 12
+            },
+            {
+              "from": "06:00",
+              "to": "08:00",
+              "everyMinutes": 8
+            },
+            {
+              "from": "08:00",
+              "to": "11:30",
+              "everyMinutes": 12
+            },
+            {
+              "from": "11:30",
+              "to": "14:00",
+              "everyMinutes": 10
+            },
+            {
+              "from": "14:00",
+              "to": "17:00",
+              "everyMinutes": 12
+            },
+            {
+              "from": "17:00",
+              "to": "19:30",
+              "everyMinutes": 8
+            },
+            {
+              "from": "19:30",
+              "to": "23:00",
+              "everyMinutes": 15
+            }
+          ]
+        },
+        {
+          "days": "saturday",
+          "quality": "ficticio",
+          "headways": [
+            {
+              "from": "06:00",
+              "to": "22:00",
+              "everyMinutes": 15
+            }
+          ]
+        },
+        {
+          "days": "sunday_holiday",
+          "quality": "ficticio",
+          "headways": [
+            {
+              "from": "07:00",
+              "to": "21:00",
+              "everyMinutes": 20
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "M1",
+      "shortName": "M1",
+      "longName": "Mogambo 22",
+      "operator": "Metrosinú",
+      "color": "#DB2777",
+      "patterns": [
+        {
+          "id": "M1-0",
+          "direction": 0,
+          "headsign": "Unicórdoba",
+          "quality": "ficticio",
+          "stops": [
+            {
+              "stopId": "mogambo",
+              "minutesFromStart": 0
+            },
+            {
+              "stopId": "calle22-cra6",
+              "minutesFromStart": 5
+            },
+            {
+              "stopId": "centro-cra4",
+              "minutesFromStart": 10
+            },
+            {
+              "stopId": "cra4-calle44",
+              "minutesFromStart": 14
+            },
+            {
+              "stopId": "corr-calle62",
+              "minutesFromStart": 20
+            },
+            {
+              "stopId": "corr-calle72",
+              "minutesFromStart": 23
+            },
+            {
+              "stopId": "unicordoba",
+              "minutesFromStart": 25
+            }
+          ],
+          "shape": [
+            {
+              "latitude": 8.736,
+              "longitude": -75.882
+            },
+            {
+              "latitude": 8.75,
+              "longitude": -75.88
+            },
+            {
+              "latitude": 8.76,
+              "longitude": -75.882
+            },
+            {
+              "latitude": 8.77,
+              "longitude": -75.879
+            },
+            {
+              "latitude": 8.78,
+              "longitude": -75.866
+            },
+            {
+              "latitude": 8.786,
+              "longitude": -75.863
+            },
+            {
+              "latitude": 8.7895,
+              "longitude": -75.8605
+            }
+          ]
+        }
+      ],
+      "service": [
+        {
+          "days": "weekday",
+          "quality": "ficticio",
+          "headways": [
+            {
+              "from": "05:00",
+              "to": "06:00",
+              "everyMinutes": 12
+            },
+            {
+              "from": "06:00",
+              "to": "08:00",
+              "everyMinutes": 8
+            },
+            {
+              "from": "08:00",
+              "to": "11:30",
+              "everyMinutes": 12
+            },
+            {
+              "from": "11:30",
+              "to": "14:00",
+              "everyMinutes": 10
+            },
+            {
+              "from": "14:00",
+              "to": "17:00",
+              "everyMinutes": 12
+            },
+            {
+              "from": "17:00",
+              "to": "19:30",
+              "everyMinutes": 8
+            },
+            {
+              "from": "19:30",
+              "to": "23:00",
+              "everyMinutes": 15
+            }
+          ]
+        },
+        {
+          "days": "saturday",
+          "quality": "ficticio",
+          "headways": [
+            {
+              "from": "06:00",
+              "to": "22:00",
+              "everyMinutes": 15
+            }
+          ]
+        },
+        {
+          "days": "sunday_holiday",
+          "quality": "ficticio",
+          "headways": [
+            {
+              "from": "07:00",
+              "to": "21:00",
+              "everyMinutes": 20
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P1",
+      "shortName": "P1",
+      "longName": "Pradera 27",
+      "operator": "Metrosinú",
+      "color": "#235ED7",
+      "patterns": [
+        {
+          "id": "P1-0",
+          "direction": 0,
+          "headsign": "Unicórdoba",
+          "quality": "ficticio",
+          "stops": [
+            {
+              "stopId": "pradera",
+              "minutesFromStart": 0
+            },
+            {
+              "stopId": "calle22-cra25",
+              "minutesFromStart": 2
+            },
+            {
+              "stopId": "corr-calle29",
+              "minutesFromStart": 7
+            },
+            {
+              "stopId": "corr-calle44",
+              "minutesFromStart": 12
+            },
+            {
+              "stopId": "corr-calle62",
+              "minutesFromStart": 16
+            },
+            {
+              "stopId": "corr-calle72",
+              "minutesFromStart": 19
+            },
+            {
+              "stopId": "unicordoba",
+              "minutesFromStart": 21
+            }
+          ],
+          "shape": [
+            {
+              "latitude": 8.742,
+              "longitude": -75.869
+            },
+            {
+              "latitude": 8.748,
+              "longitude": -75.87
+            },
+            {
+              "latitude": 8.76,
+              "longitude": -75.872
+            },
+            {
+              "latitude": 8.77,
+              "longitude": -75.87
+            },
+            {
+              "latitude": 8.78,
+              "longitude": -75.866
+            },
+            {
+              "latitude": 8.786,
+              "longitude": -75.863
+            },
+            {
+              "latitude": 8.7895,
+              "longitude": -75.8605
+            }
+          ]
+        }
+      ],
+      "service": [
+        {
+          "days": "weekday",
+          "quality": "ficticio",
+          "headways": [
+            {
+              "from": "05:00",
+              "to": "06:00",
+              "everyMinutes": 12
+            },
+            {
+              "from": "06:00",
+              "to": "08:00",
+              "everyMinutes": 8
+            },
+            {
+              "from": "08:00",
+              "to": "11:30",
+              "everyMinutes": 12
+            },
+            {
+              "from": "11:30",
+              "to": "14:00",
+              "everyMinutes": 10
+            },
+            {
+              "from": "14:00",
+              "to": "17:00",
+              "everyMinutes": 12
+            },
+            {
+              "from": "17:00",
+              "to": "19:30",
+              "everyMinutes": 8
+            },
+            {
+              "from": "19:30",
+              "to": "23:00",
+              "everyMinutes": 15
+            }
+          ]
+        },
+        {
+          "days": "saturday",
+          "quality": "ficticio",
+          "headways": [
+            {
+              "from": "06:00",
+              "to": "22:00",
+              "everyMinutes": 15
+            }
+          ]
+        },
+        {
+          "days": "sunday_holiday",
+          "quality": "ficticio",
+          "headways": [
+            {
+              "from": "07:00",
+              "to": "21:00",
+              "everyMinutes": 20
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P2",
+      "shortName": "P2",
+      "longName": "Pradera Mercasur",
+      "operator": "Metrosinú",
+      "color": "#2563EB",
+      "patterns": [
+        {
+          "id": "P2-0",
+          "direction": 0,
+          "headsign": "Unicórdoba",
+          "quality": "ficticio",
+          "stops": [
+            {
+              "stopId": "mercasur",
+              "minutesFromStart": 0
+            },
+            {
+              "stopId": "pradera",
+              "minutesFromStart": 3
+            },
+            {
+              "stopId": "corr-calle29",
+              "minutesFromStart": 10
+            },
+            {
+              "stopId": "corr-calle44",
+              "minutesFromStart": 15
+            },
+            {
+              "stopId": "corr-calle62",
+              "minutesFromStart": 19
+            },
+            {
+              "stopId": "corr-calle72",
+              "minutesFromStart": 22
+            },
+            {
+              "stopId": "unicordoba",
+              "minutesFromStart": 24
+            }
+          ],
+          "shape": [
+            {
+              "latitude": 8.738,
+              "longitude": -75.876
+            },
+            {
+              "latitude": 8.742,
+              "longitude": -75.869
+            },
+            {
+              "latitude": 8.76,
+              "longitude": -75.872
+            },
+            {
+              "latitude": 8.77,
+              "longitude": -75.87
+            },
+            {
+              "latitude": 8.78,
+              "longitude": -75.866
+            },
+            {
+              "latitude": 8.786,
+              "longitude": -75.863
+            },
+            {
+              "latitude": 8.7895,
+              "longitude": -75.8605
+            }
+          ]
+        }
+      ],
+      "service": [
+        {
+          "days": "weekday",
+          "quality": "ficticio",
+          "headways": [
+            {
+              "from": "05:00",
+              "to": "06:00",
+              "everyMinutes": 12
+            },
+            {
+              "from": "06:00",
+              "to": "08:00",
+              "everyMinutes": 8
+            },
+            {
+              "from": "08:00",
+              "to": "11:30",
+              "everyMinutes": 12
+            },
+            {
+              "from": "11:30",
+              "to": "14:00",
+              "everyMinutes": 10
+            },
+            {
+              "from": "14:00",
+              "to": "17:00",
+              "everyMinutes": 12
+            },
+            {
+              "from": "17:00",
+              "to": "19:30",
+              "everyMinutes": 8
+            },
+            {
+              "from": "19:30",
+              "to": "23:00",
+              "everyMinutes": 15
+            }
+          ]
+        },
+        {
+          "days": "saturday",
+          "quality": "ficticio",
+          "headways": [
+            {
+              "from": "06:00",
+              "to": "22:00",
+              "everyMinutes": 15
+            }
+          ]
+        },
+        {
+          "days": "sunday_holiday",
+          "quality": "ficticio",
+          "headways": [
+            {
+              "from": "07:00",
+              "to": "21:00",
+              "everyMinutes": 20
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P3",
+      "shortName": "P3",
+      "longName": "Panzenú",
+      "operator": "Metrosinú",
+      "color": "#059669",
+      "patterns": [
+        {
+          "id": "P3-0",
+          "direction": 0,
+          "headsign": "Unicórdoba",
+          "quality": "ficticio",
+          "stops": [
+            {
+              "stopId": "panzenu",
+              "minutesFromStart": 0
+            },
+            {
+              "stopId": "calle22-cra6",
+              "minutesFromStart": 4
+            },
+            {
+              "stopId": "centro-cra4",
+              "minutesFromStart": 8
+            },
+            {
+              "stopId": "cra4-calle44",
+              "minutesFromStart": 13
+            },
+            {
+              "stopId": "corr-calle62",
+              "minutesFromStart": 19
+            },
+            {
+              "stopId": "corr-calle72",
+              "minutesFromStart": 22
+            },
+            {
+              "stopId": "unicordoba",
+              "minutesFromStart": 24
+            }
+          ],
+          "shape": [
+            {
+              "latitude": 8.74,
+              "longitude": -75.883
+            },
+            {
+              "latitude": 8.75,
+              "longitude": -75.88
+            },
+            {
+              "latitude": 8.76,
+              "longitude": -75.882
+            },
+            {
+              "latitude": 8.77,
+              "longitude": -75.879
+            },
+            {
+              "latitude": 8.78,
+              "longitude": -75.866
+            },
+            {
+              "latitude": 8.786,
+              "longitude": -75.863
+            },
+            {
+              "latitude": 8.7895,
+              "longitude": -75.8605
+            }
+          ]
+        }
+      ],
+      "service": [
+        {
+          "days": "weekday",
+          "quality": "ficticio",
+          "headways": [
+            {
+              "from": "05:00",
+              "to": "06:00",
+              "everyMinutes": 12
+            },
+            {
+              "from": "06:00",
+              "to": "08:00",
+              "everyMinutes": 8
+            },
+            {
+              "from": "08:00",
+              "to": "11:30",
+              "everyMinutes": 12
+            },
+            {
+              "from": "11:30",
+              "to": "14:00",
+              "everyMinutes": 10
+            },
+            {
+              "from": "14:00",
+              "to": "17:00",
+              "everyMinutes": 12
+            },
+            {
+              "from": "17:00",
+              "to": "19:30",
+              "everyMinutes": 8
+            },
+            {
+              "from": "19:30",
+              "to": "23:00",
+              "everyMinutes": 15
+            }
+          ]
+        },
+        {
+          "days": "saturday",
+          "quality": "ficticio",
+          "headways": [
+            {
+              "from": "06:00",
+              "to": "22:00",
+              "everyMinutes": 15
+            }
+          ]
+        },
+        {
+          "days": "sunday_holiday",
+          "quality": "ficticio",
+          "headways": [
+            {
+              "from": "07:00",
+              "to": "21:00",
+              "everyMinutes": 20
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "RG",
+      "shortName": "RG",
+      "longName": "Rancho Grande",
+      "operator": "Metrosinú",
+      "color": "#DC2626",
+      "patterns": [
+        {
+          "id": "RG-0",
+          "direction": 0,
+          "headsign": "Unicórdoba",
+          "quality": "ficticio",
+          "stops": [
+            {
+              "stopId": "rancho-grande",
+              "minutesFromStart": 0
+            },
+            {
+              "stopId": "seis-de-marzo",
+              "minutesFromStart": 3
+            },
+            {
+              "stopId": "calle29-cra14",
+              "minutesFromStart": 10
+            },
+            {
+              "stopId": "corr-calle29",
+              "minutesFromStart": 14
+            },
+            {
+              "stopId": "corr-calle44",
+              "minutesFromStart": 18
+            },
+            {
+              "stopId": "corr-calle62",
+              "minutesFromStart": 22
+            },
+            {
+              "stopId": "corr-calle72",
+              "minutesFromStart": 25
+            },
+            {
+              "stopId": "unicordoba",
+              "minutesFromStart": 27
+            }
+          ],
+          "shape": [
+            {
+              "latitude": 8.733,
+              "longitude": -75.856
+            },
+            {
+              "latitude": 8.741,
+              "longitude": -75.858
+            },
+            {
+              "latitude": 8.757,
+              "longitude": -75.864
+            },
+            {
+              "latitude": 8.76,
+              "longitude": -75.872
+            },
+            {
+              "latitude": 8.77,
+              "longitude": -75.87
+            },
+            {
+              "latitude": 8.78,
+              "longitude": -75.866
+            },
+            {
+              "latitude": 8.786,
+              "longitude": -75.863
+            },
+            {
+              "latitude": 8.7895,
+              "longitude": -75.8605
+            }
+          ]
+        }
+      ],
+      "service": [
+        {
+          "days": "weekday",
+          "quality": "ficticio",
+          "headways": [
+            {
+              "from": "05:00",
+              "to": "06:00",
+              "everyMinutes": 12
+            },
+            {
+              "from": "06:00",
+              "to": "08:00",
+              "everyMinutes": 8
+            },
+            {
+              "from": "08:00",
+              "to": "11:30",
+              "everyMinutes": 12
+            },
+            {
+              "from": "11:30",
+              "to": "14:00",
+              "everyMinutes": 10
+            },
+            {
+              "from": "14:00",
+              "to": "17:00",
+              "everyMinutes": 12
+            },
+            {
+              "from": "17:00",
+              "to": "19:30",
+              "everyMinutes": 8
+            },
+            {
+              "from": "19:30",
+              "to": "23:00",
+              "everyMinutes": 15
+            }
+          ]
+        },
+        {
+          "days": "saturday",
+          "quality": "ficticio",
+          "headways": [
+            {
+              "from": "06:00",
+              "to": "22:00",
+              "everyMinutes": 15
+            }
+          ]
+        },
+        {
+          "days": "sunday_holiday",
+          "quality": "ficticio",
+          "headways": [
+            {
+              "from": "07:00",
+              "to": "21:00",
+              "everyMinutes": 20
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "S1",
+      "shortName": "S1",
+      "longName": "Santander",
+      "operator": "Metrosinú",
+      "color": "#EA580C",
+      "patterns": [
+        {
+          "id": "S1-0",
+          "direction": 0,
+          "headsign": "Unicórdoba",
+          "quality": "ficticio",
+          "stops": [
+            {
+              "stopId": "santander",
+              "minutesFromStart": 0
+            },
+            {
+              "stopId": "corr-calle29",
+              "minutesFromStart": 4
+            },
+            {
+              "stopId": "corr-calle44",
+              "minutesFromStart": 9
+            },
+            {
+              "stopId": "corr-calle62",
+              "minutesFromStart": 13
+            },
+            {
+              "stopId": "corr-calle72",
+              "minutesFromStart": 16
+            },
+            {
+              "stopId": "unicordoba",
+              "minutesFromStart": 18
+            }
+          ],
+          "shape": [
+            {
+              "latitude": 8.75,
+              "longitude": -75.866
+            },
+            {
+              "latitude": 8.76,
+              "longitude": -75.872
+            },
+            {
+              "latitude": 8.77,
+              "longitude": -75.87
+            },
+            {
+              "latitude": 8.78,
+              "longitude": -75.866
+            },
+            {
+              "latitude": 8.786,
+              "longitude": -75.863
+            },
+            {
+              "latitude": 8.7895,
+              "longitude": -75.8605
+            }
+          ]
+        }
+      ],
+      "service": [
+        {
+          "days": "weekday",
+          "quality": "ficticio",
+          "headways": [
+            {
+              "from": "05:00",
+              "to": "06:00",
+              "everyMinutes": 12
+            },
+            {
+              "from": "06:00",
+              "to": "08:00",
+              "everyMinutes": 8
+            },
+            {
+              "from": "08:00",
+              "to": "11:30",
+              "everyMinutes": 12
+            },
+            {
+              "from": "11:30",
+              "to": "14:00",
+              "everyMinutes": 10
+            },
+            {
+              "from": "14:00",
+              "to": "17:00",
+              "everyMinutes": 12
+            },
+            {
+              "from": "17:00",
+              "to": "19:30",
+              "everyMinutes": 8
+            },
+            {
+              "from": "19:30",
+              "to": "23:00",
+              "everyMinutes": 15
+            }
+          ]
+        },
+        {
+          "days": "saturday",
+          "quality": "ficticio",
+          "headways": [
+            {
+              "from": "06:00",
+              "to": "22:00",
+              "everyMinutes": 15
+            }
+          ]
+        },
+        {
+          "days": "sunday_holiday",
+          "quality": "ficticio",
+          "headways": [
+            {
+              "from": "07:00",
+              "to": "21:00",
+              "everyMinutes": 20
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "T2",
+      "shortName": "T2",
+      "longName": "Tambo",
+      "operator": "Metrosinú",
+      "color": "#16A34A",
+      "patterns": [
+        {
+          "id": "T2-0",
+          "direction": 0,
+          "headsign": "Unicórdoba",
+          "quality": "ficticio",
+          "stops": [
+            {
+              "stopId": "tambo",
+              "minutesFromStart": 0
+            },
+            {
+              "stopId": "calle29-cra14",
+              "minutesFromStart": 4
+            },
+            {
+              "stopId": "corr-calle29",
+              "minutesFromStart": 8
+            },
+            {
+              "stopId": "corr-calle44",
+              "minutesFromStart": 12
+            },
+            {
+              "stopId": "corr-calle62",
+              "minutesFromStart": 17
+            },
+            {
+              "stopId": "corr-calle72",
+              "minutesFromStart": 19
+            },
+            {
+              "stopId": "unicordoba",
+              "minutesFromStart": 22
+            }
+          ],
+          "shape": [
+            {
+              "latitude": 8.752,
+              "longitude": -75.854
+            },
+            {
+              "latitude": 8.757,
+              "longitude": -75.864
+            },
+            {
+              "latitude": 8.76,
+              "longitude": -75.872
+            },
+            {
+              "latitude": 8.77,
+              "longitude": -75.87
+            },
+            {
+              "latitude": 8.78,
+              "longitude": -75.866
+            },
+            {
+              "latitude": 8.786,
+              "longitude": -75.863
+            },
+            {
+              "latitude": 8.7895,
+              "longitude": -75.8605
+            }
+          ]
+        }
+      ],
+      "service": [
+        {
+          "days": "weekday",
+          "quality": "ficticio",
+          "headways": [
+            {
+              "from": "05:00",
+              "to": "06:00",
+              "everyMinutes": 12
+            },
+            {
+              "from": "06:00",
+              "to": "08:00",
+              "everyMinutes": 8
+            },
+            {
+              "from": "08:00",
+              "to": "11:30",
+              "everyMinutes": 12
+            },
+            {
+              "from": "11:30",
+              "to": "14:00",
+              "everyMinutes": 10
+            },
+            {
+              "from": "14:00",
+              "to": "17:00",
+              "everyMinutes": 12
+            },
+            {
+              "from": "17:00",
+              "to": "19:30",
+              "everyMinutes": 8
+            },
+            {
+              "from": "19:30",
+              "to": "23:00",
+              "everyMinutes": 15
+            }
+          ]
+        },
+        {
+          "days": "saturday",
+          "quality": "ficticio",
+          "headways": [
+            {
+              "from": "06:00",
+              "to": "22:00",
+              "everyMinutes": 15
+            }
+          ]
+        },
+        {
+          "days": "sunday_holiday",
+          "quality": "ficticio",
+          "headways": [
+            {
+              "from": "07:00",
+              "to": "21:00",
+              "everyMinutes": 20
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,29 +1,24 @@
-// Geografía de MUESTRA para el mapa real. Las coordenadas son aproximadas e ilustrativas:
-// un recorrido inventado entre el centro de Montería y la sede central de la Universidad de
-// Córdoba. Se reemplazan por los recorridos reales (paradas + polilínea por ruta) cuando
-// exista el modelo de datos de rutas.
+// Utilidades geográficas. Sin importaciones de valores para que Node pueda usarlo desde
+// scripts/import-routes.ts sin compilar.
+import type { LatLng } from './model';
 
-export type LatLng = { latitude: number; longitude: number };
+export type { LatLng };
 
 /** Centro aproximado de Montería (Córdoba, Colombia). */
 export const MONTERIA_CENTER: LatLng = { latitude: 8.7575, longitude: -75.8851 };
 
-/** Parada del usuario (muestra). */
-export const SAMPLE_USER_STOP: LatLng = { latitude: 8.759, longitude: -75.879 };
+const EARTH_RADIUS_M = 6_371_000;
+const toRad = (deg: number) => (deg * Math.PI) / 180;
 
-/** Recorrido de muestra: parada del usuario -> universidad. */
-export const SAMPLE_ROUTE_PATH: LatLng[] = [
-  SAMPLE_USER_STOP,
-  { latitude: 8.764, longitude: -75.878 },
-  { latitude: 8.77, longitude: -75.874 },
-  { latitude: 8.776, longitude: -75.87 },
-  { latitude: 8.782, longitude: -75.866 },
-  { latitude: 8.787, longitude: -75.862 },
-  { latitude: 8.7905, longitude: -75.859 },
-];
-
-/** Posición de muestra del bus sobre el recorrido. */
-export const SAMPLE_BUS_POSITION: LatLng = SAMPLE_ROUTE_PATH[2];
+/** Distancia en metros entre dos puntos (fórmula de haversine). */
+export function distanceMeters(a: LatLng, b: LatLng): number {
+  const dLat = toRad(b.latitude - a.latitude);
+  const dLng = toRad(b.longitude - a.longitude);
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(a.latitude)) * Math.cos(toRad(b.latitude)) * Math.sin(dLng / 2) ** 2;
+  return 2 * EARTH_RADIUS_M * Math.asin(Math.sqrt(h));
+}
 
 /** Región que encuadra todos los puntos, con un margen alrededor. */
 export function regionFor(points: LatLng[], padding = 1.4) {

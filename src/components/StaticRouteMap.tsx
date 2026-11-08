@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { StyleSheet, Text, View, type DimensionValue } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
+import type { LatLng } from '../data/geo';
 import { colors, fonts, fontSize, radius } from '../theme';
 
 /** API pública del mapa (la comparten el mapa real y el de respaldo). */
@@ -10,6 +11,10 @@ export type RouteMapProps = {
   height: number;
   /** Etiqueta de la ruta cuyo bus se dibuja en el mapa (ej. "T2"). Sin valor, no se muestra bus. */
   busLabel?: string;
+  /** Ruta cuyo recorrido se dibuja. Sin valor, la ruta por defecto. */
+  routeId?: string;
+  /** Ubicación del usuario; marca como "Tu parada" la parada más cercana del recorrido. */
+  origin?: LatLng | null;
 };
 
 // Mapa ilustrativo hecho con Views, igual al del prototipo de Figma ("Mapa de la ruta").

@@ -1,26 +1,25 @@
 import { useNetworkState } from 'expo-network';
 import { BusFront, LocateFixed } from 'lucide-react-native';
-import { useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import MapView, { Marker, Polyline } from 'react-native-maps';
 
-import { regionFor, SAMPLE_BUS_POSITION, SAMPLE_ROUTE_PATH, SAMPLE_USER_STOP } from '../data/geo';
+import { tripMapData } from '../data/tripMap';
 import { colors, fonts, fontSize, radius } from '../theme';
 import { StaticRouteMap, type RouteMapProps } from './StaticRouteMap';
 
-const ROUTE_REGION = regionFor(SAMPLE_ROUTE_PATH);
-const USER_REGION = { ...SAMPLE_USER_STOP, latitudeDelta: 0.008, longitudeDelta: 0.008 };
-const DESTINATION = SAMPLE_ROUTE_PATH[SAMPLE_ROUTE_PATH.length - 1];
+const USER_ZOOM = { latitudeDelta: 0.008, longitudeDelta: 0.008 };
 /** Ancho fijo del marcador "Tu parada" para poder anclarlo al centro del punto azul. */
 const USER_MARKER_WIDTH = 120;
 
 // Mapa real de Montería (react-native-maps: Apple Maps en iOS, Google Maps en Android).
 // Sin conexión se muestra el mapa ilustrativo, que no necesita descargar teselas.
-export function RouteMap({ height, busLabel }: RouteMapProps) {
+export function RouteMap({ height, busLabel, routeId, origin }: RouteMapProps) {
   const network = useNetworkState();
   // Mientras el estado de red no se conoce (undefined) se asume que hay conexión.
   const offline = network.isConnected === false || network.isInternetReachable === false;
   const mapRef = useRef<MapView>(null);
+  const data = useMemo(() => tripMapData(routeId, origin), [routeId, origin]);
 
   if (offline) return <StaticRouteMap height={height} busLabel={busLabel} offline />;
 
@@ -29,7 +28,9 @@ export function RouteMap({ height, busLabel }: RouteMapProps) {
       <MapView
         ref={mapRef}
         style={StyleSheet.absoluteFill}
-        initialRegion={ROUTE_REGION}
+        // key: al cambiar de ruta se vuelve a encuadrar el recorrido.
+        key={routeId}
+        initialRegion={data.region}
         accessibilityLabel="Mapa del recorrido de la ruta en Montería"
         rotateEnabled={false}
         pitchEnabled={false}
@@ -38,7 +39,7 @@ export function RouteMap({ height, busLabel }: RouteMapProps) {
         showsCompass={false}
       >
         <Polyline
-          coordinates={SAMPLE_ROUTE_PATH}
+          coordinates={data.path}
           strokeColor={colors.route}
           strokeWidth={4}
           lineDashPattern={[1, 10]}
@@ -46,11 +47,11 @@ export function RouteMap({ height, busLabel }: RouteMapProps) {
           lineJoin="round"
         />
 
-        <Marker coordinate={DESTINATION} anchor={{ x: 0.5, y: 0.5 }} title="Universidad">
+        <Marker coordinate={data.destinationStop} anchor={{ x: 0.5, y: 0.5 }} title="Universidad">
           <View style={styles.stop} />
         </Marker>
 
-        <Marker coordinate={SAMPLE_USER_STOP} anchor={{ x: 18 / USER_MARKER_WIDTH, y: 0.5 }}>
+        <Marker coordinate={data.userStop} anchor={{ x: 18 / USER_MARKER_WIDTH, y: 0.5 }}>
           <View style={styles.userMarker}>
             <View style={styles.userHalo}>
               <View style={styles.userDot} />
@@ -62,7 +63,7 @@ export function RouteMap({ height, busLabel }: RouteMapProps) {
         </Marker>
 
         {busLabel ? (
-          <Marker coordinate={SAMPLE_BUS_POSITION} anchor={{ x: 0.5, y: 0.5 }}>
+          <Marker coordinate={data.busPosition} anchor={{ x: 0.5, y: 0.5 }}>
             <View style={styles.bus}>
               <BusFront size={16} color={colors.onPrimary} />
               <Text style={styles.busText}>{busLabel}</Text>
@@ -74,7 +75,7 @@ export function RouteMap({ height, busLabel }: RouteMapProps) {
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Centrar en tu parada"
-        onPress={() => mapRef.current?.animateToRegion(USER_REGION, 400)}
+        onPress={() => mapRef.current?.animateToRegion({ ...data.userStop, ...USER_ZOOM }, 400)}
         style={styles.locate}
       >
         <LocateFixed size={18} color={colors.primary} />

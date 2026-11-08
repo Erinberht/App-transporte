@@ -5,22 +5,24 @@ import { StyleSheet, Text, View } from 'react-native';
 import { LiveBadge } from '../components/LiveBadge';
 import { RouteMap } from '../components/RouteMap';
 import { ScreenLayout } from '../components/ScreenLayout';
-import { getRoute, ROUTES } from '../data/routes';
+import { getLiveStatus, noticeForOtherRoute } from '../data/live';
+import { getRouteOrDefault, routesRepository } from '../data/repository';
 import { useTrip } from '../state/trip';
 import { colors, fonts, fontSize, radius } from '../theme';
 
 // Paso 2 de 5 · "Bus en el mapa"
 export default function BusOnMapScreen() {
-  const { routeId } = useTrip();
-  const route = getRoute(routeId);
+  const { routeId, origin } = useTrip();
+  const route = getRouteOrDefault(routeId);
   // Aviso de otra ruta (ej. "Rancho Grande: sin reportes"). Aquí irán retrasos, tráfico y desvíos.
-  const notice = ROUTES.find((r) => r.notice && r.id !== route.id)?.notice;
+  const notice = noticeForOtherRoute(route.id);
+  const verified = routesRepository.getPattern(route.id)?.quality === 'verificado';
 
   return (
     <ScreenLayout
       step={2}
       title="Tu bus en el mapa"
-      subtitle={`Ruta ${route.name} · Sigue el recorrido hasta tu parada.`}
+      subtitle={`Ruta ${route.shortName} · Sigue el recorrido hasta tu parada.`}
       footerNote="Cuando estés a bordo, confirma para continuar."
       ctaLabel="Ya subí"
       ctaIcon={Check}
@@ -34,25 +36,27 @@ export default function BusOnMapScreen() {
         </View>
       ) : null}
 
-      <RouteMap height={310} busLabel={route.name} />
+      <RouteMap height={310} busLabel={route.shortName} routeId={route.id} origin={origin} />
 
       <View style={styles.arrival}>
         <View style={styles.row}>
           <View style={styles.routeId}>
             <BusFront size={20} color={colors.text} />
-            <Text style={styles.routeName}>{route.name}</Text>
+            <Text style={styles.routeName}>{route.shortName}</Text>
           </View>
           <LiveBadge />
         </View>
         <View style={styles.row}>
-          <Text style={styles.eta}>Llega en {route.etaMinutes} min</Text>
+          <Text style={styles.eta}>Llega en {getLiveStatus(route.id).etaMinutes} min</Text>
           <Clock3 size={24} color={colors.success} />
         </View>
       </View>
 
       <View style={styles.legend}>
         <Text style={styles.legendDots}>•••••</Text>
-        <Text style={styles.legendText}>Recorrido de la ruta</Text>
+        <Text style={styles.legendText}>
+          {verified ? 'Recorrido de la ruta' : 'Recorrido aproximado (datos de prueba)'}
+        </Text>
       </View>
     </ScreenLayout>
   );
