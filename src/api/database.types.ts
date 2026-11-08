@@ -372,10 +372,28 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      close_stale_trips: { Args: Record<PropertyKey, never>; Returns: number };
       delete_my_data: { Args: Record<PropertyKey, never>; Returns: undefined };
       get_transit_dataset: { Args: Record<PropertyKey, never>; Returns: Json };
       in_monteria: { Args: { g: unknown }; Returns: boolean };
+      live_bus_clusters: {
+        Args: { p_route_id: string };
+        Returns: {
+          cluster_id: number;
+          location: unknown;
+          recorded_at: string;
+        }[];
+      };
       purge_expired_data: { Args: Record<PropertyKey, never>; Returns: undefined };
+      route_live_buses: {
+        Args: { p_route_id: string };
+        Returns: {
+          latitude: number;
+          longitude: number;
+          position_at: string;
+          travelers: number;
+        }[];
+      };
       route_live_status: {
         Args: { p_route_id: string };
         Returns: {

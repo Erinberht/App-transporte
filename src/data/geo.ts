@@ -35,3 +35,30 @@ export function regionFor(points: LatLng[], padding = 1.4) {
     longitudeDelta: Math.max((maxLng - minLng) * padding, 0.005),
   };
 }
+
+/**
+ * Distancia en metros de un punto a una línea quebrada (el recorrido de una ruta).
+ * Proyección plana local: suficiente para distancias de pocos kilómetros.
+ */
+export function distanceToPathMeters(point: LatLng, path: LatLng[]): number {
+  if (path.length === 0) return Infinity;
+  if (path.length === 1) return distanceMeters(point, path[0]);
+  const mPerLat = (Math.PI / 180) * EARTH_RADIUS_M;
+  const mPerLng = mPerLat * Math.cos(toRad(point.latitude));
+  const xy = (p: LatLng) => ({
+    x: (p.longitude - point.longitude) * mPerLng,
+    y: (p.latitude - point.latitude) * mPerLat,
+  });
+  let best = Infinity;
+  for (let i = 1; i < path.length; i++) {
+    const a = xy(path[i - 1]);
+    const b = xy(path[i]);
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const len2 = dx * dx + dy * dy;
+    // Punto del segmento más cercano al origen (que es `point`).
+    const t = len2 === 0 ? 0 : Math.max(0, Math.min(1, -(a.x * dx + a.y * dy) / len2));
+    best = Math.min(best, Math.hypot(a.x + t * dx, a.y + t * dy));
+  }
+  return best;
+}

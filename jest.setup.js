@@ -43,7 +43,25 @@ jest.mock('expo-location', () => ({
     coords: { latitude: 8.759, longitude: -75.879, accuracy: 35 },
     timestamp: 0,
   })),
+  // Compartir el recorrido: sin permiso "todo el tiempo" (solo con la app abierta).
+  ActivityType: { Other: 1, AutomotiveNavigation: 2, Fitness: 3, OtherNavigation: 4, Airborne: 5 },
+  getBackgroundPermissionsAsync: jest.fn(async () => ({
+    status: 'denied',
+    granted: false,
+    canAskAgain: false,
+  })),
+  requestBackgroundPermissionsAsync: jest.fn(async () => ({
+    status: 'denied',
+    granted: false,
+    canAskAgain: false,
+  })),
+  startLocationUpdatesAsync: jest.fn(async () => {}),
+  stopLocationUpdatesAsync: jest.fn(async () => {}),
+  hasStartedLocationUpdatesAsync: jest.fn(async () => false),
+  watchPositionAsync: jest.fn(async () => ({ remove: jest.fn() })),
 }));
+
+jest.mock('expo-task-manager', () => ({ defineTask: jest.fn() }));
 
 // Selector de hora: componente simple (iOS) y apertura imperativa (Android).
 jest.mock('@react-native-community/datetimepicker', () => {
