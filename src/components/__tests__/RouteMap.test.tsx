@@ -32,18 +32,18 @@ describe('RouteMap', () => {
     expect(longitude).toBeCloseTo(-75.87, 1);
   });
 
-  it('dibuja el recorrido de la ruta elegida', async () => {
-    await render(<RouteMap height={200} routeId="M1" />);
-
-    const polyline = screen.getByTestId('map-polyline');
-    expect(polyline.props.coordinates).toEqual(routesRepository.getPattern('M1')?.shape);
-  });
-
   it('sin bus (busLabel vacío) no muestra el marcador del bus', async () => {
     await render(<RouteMap height={200} />);
 
     expect(screen.getByText('Tu parada')).toBeOnTheScreen();
     expect(screen.queryByText('T2')).not.toBeOnTheScreen();
+  });
+
+  it('dibuja el recorrido de la ruta elegida', async () => {
+    await render(<RouteMap height={200} routeId="M1" />);
+
+    const polyline = screen.getByTestId('map-polyline');
+    expect(polyline.props.coordinates).toEqual(routesRepository.getPattern('M1')?.shape);
   });
 
   it('sin conexión muestra el mapa ilustrativo de respaldo', async () => {
