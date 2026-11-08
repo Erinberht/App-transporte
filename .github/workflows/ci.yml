@@ -36,3 +36,37 @@ jobs:
 
       - name: Tests
         run: npm test -- --ci
+
+  database:
+    name: Base de datos (pgTAP + integración)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Levantar Supabase local
+        run: npx supabase start
+
+      - name: Pruebas de seguridad de la base (pgTAP)
+        run: npm run db:test
+
+      - name: Tipos generados al día
+        run: |
+          npm run db:types
+          git diff --exit-code src/api/database.types.ts
+
+      - name: Seed al día con los datos de la app
+        run: |
+          npm run data:sql
+          git diff --exit-code supabase/seed.sql
+
+      - name: Integración de la API
+        run: npm run test:integration
