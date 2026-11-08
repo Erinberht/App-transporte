@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { RouteMap } from '../components/RouteMap';
 import { ScreenLayout } from '../components/ScreenLayout';
 import { getRouteOrDefault } from '../data/repository';
+import { tripOptionFor, useRoutePlan } from '../planner/useRoutePlan';
 import { useTrip } from '../state/trip';
 import { colors, fonts, fontSize, lineHeight, radius } from '../theme';
 
@@ -12,6 +13,7 @@ import { colors, fonts, fontSize, lineHeight, radius } from '../theme';
 export default function ShareTripScreen() {
   const { routeId, origin, setSharing } = useTrip();
   const route = getRouteOrDefault(routeId);
+  const boardStopId = tripOptionFor(useRoutePlan(), route.id)?.boardStop.id;
 
   return (
     <ScreenLayout
@@ -28,7 +30,13 @@ export default function ShareTripScreen() {
       }}
       gap={18}
     >
-      <RouteMap height={158} busLabel={route.shortName} routeId={route.id} origin={origin} />
+      <RouteMap
+        height={158}
+        busLabel={route.shortName}
+        routeId={route.id}
+        origin={origin}
+        boardStopId={boardStopId}
+      />
 
       <View style={styles.shareCard}>
         <View style={styles.shareTop}>

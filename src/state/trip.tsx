@@ -3,6 +3,7 @@ import { createContext, useContext, useMemo, useState, type ReactNode } from 're
 import { DEFAULT_DESTINATION_ID } from '../data/destinations';
 import type { LatLng } from '../data/geo';
 import { DEFAULT_CLASS_TIME, type ClassTime } from '../lib/classTime';
+import { DEFAULT_WALKING, type WalkingPrefs } from '../planner/recommend';
 import type { Occupancy } from '../types';
 
 type TripState = {
@@ -13,12 +14,15 @@ type TripState = {
   /** Ubicación del usuario al planear el viaje; null si no dio permiso. Solo en memoria. */
   origin: LatLng | null;
   routeId: string;
+  /** Opciones de caminata (como en Moovit): ritmo y límite por tramo. */
+  walking: WalkingPrefs;
   occupancy: Occupancy;
   sharing: boolean;
   setDestinationId: (id: string) => void;
   setClassTime: (value: ClassTime) => void;
   setOrigin: (value: LatLng | null) => void;
   setRouteId: (id: string) => void;
+  setWalking: (value: WalkingPrefs) => void;
   setOccupancy: (value: Occupancy) => void;
   setSharing: (value: boolean) => void;
   /** Termina el viaje: borra la ubicación y el estado del recorrido. Conserva destino y hora. */
@@ -34,6 +38,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
   const [classTime, setClassTime] = useState<ClassTime>(DEFAULT_CLASS_TIME);
   const [origin, setOrigin] = useState<LatLng | null>(null);
   const [routeId, setRouteId] = useState('T2');
+  const [walking, setWalking] = useState<WalkingPrefs>(DEFAULT_WALKING);
   const [occupancy, setOccupancy] = useState<Occupancy>('medium');
   const [sharing, setSharing] = useState(false);
 
@@ -43,12 +48,14 @@ export function TripProvider({ children }: { children: ReactNode }) {
       classTime,
       origin,
       routeId,
+      walking,
       occupancy,
       sharing,
       setDestinationId,
       setClassTime,
       setOrigin,
       setRouteId,
+      setWalking,
       setOccupancy,
       setSharing,
       reset: () => {
@@ -58,7 +65,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
         setSharing(false);
       },
     }),
-    [destinationId, classTime, origin, routeId, occupancy, sharing],
+    [destinationId, classTime, origin, routeId, walking, occupancy, sharing],
   );
 
   return <TripContext.Provider value={value}>{children}</TripContext.Provider>;

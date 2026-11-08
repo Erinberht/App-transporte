@@ -7,6 +7,7 @@ import { RouteMap } from '../components/RouteMap';
 import { ScreenLayout } from '../components/ScreenLayout';
 import { getLiveStatus, noticeForOtherRoute } from '../data/live';
 import { getRouteOrDefault, routesRepository } from '../data/repository';
+import { tripOptionFor, useRoutePlan } from '../planner/useRoutePlan';
 import { useTrip } from '../state/trip';
 import { colors, fonts, fontSize, radius } from '../theme';
 
@@ -14,6 +15,7 @@ import { colors, fonts, fontSize, radius } from '../theme';
 export default function BusOnMapScreen() {
   const { routeId, origin } = useTrip();
   const route = getRouteOrDefault(routeId);
+  const boardStopId = tripOptionFor(useRoutePlan(), route.id)?.boardStop.id;
   // Aviso de otra ruta (ej. "Rancho Grande: sin reportes"). Aquí irán retrasos, tráfico y desvíos.
   const notice = noticeForOtherRoute(route.id);
   const verified = routesRepository.getPattern(route.id)?.quality === 'verificado';
@@ -36,7 +38,13 @@ export default function BusOnMapScreen() {
         </View>
       ) : null}
 
-      <RouteMap height={310} busLabel={route.shortName} routeId={route.id} origin={origin} />
+      <RouteMap
+        height={310}
+        busLabel={route.shortName}
+        routeId={route.id}
+        origin={origin}
+        boardStopId={boardStopId}
+      />
 
       <View style={styles.arrival}>
         <View style={styles.row}>

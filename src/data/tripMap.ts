@@ -29,6 +29,8 @@ export function tripMapData(
   routeId: string | undefined,
   origin: LatLng | null = null,
   destinationId = DEFAULT_DESTINATION_ID,
+  /** Parada de subida elegida por el motor de recomendación (src/planner). */
+  boardStopId?: string,
 ): TripMapData {
   const route = getRouteOrDefault(routeId ?? '');
   const pattern = routesRepository.getPattern(route.id);
@@ -40,8 +42,9 @@ export function tripMapData(
     routesRepository.nearestPatternStop(route.id, destination)?.coordinate ?? path[path.length - 1];
   // Sin ubicación se usa la primera parada (cabecera) como parada de muestra.
   const userStop =
-    (origin && routesRepository.nearestPatternStop(route.id, origin)?.coordinate) ??
-    stops[0]?.coordinate ??
+    (boardStopId && stops.find((s) => s.id === boardStopId)?.coordinate) ||
+    (origin && routesRepository.nearestPatternStop(route.id, origin)?.coordinate) ||
+    stops[0]?.coordinate ||
     path[0];
 
   const userIndex = nearestIndex(path, userStop);

@@ -15,6 +15,8 @@ export type RouteMapProps = {
   routeId?: string;
   /** Ubicación del usuario; marca como "Tu parada" la parada más cercana del recorrido. */
   origin?: LatLng | null;
+  /** Parada de subida recomendada; si no hay, la más cercana a `origin`. */
+  boardStopId?: string;
 };
 
 // Mapa ilustrativo hecho con Views, igual al del prototipo de Figma ("Mapa de la ruta").
