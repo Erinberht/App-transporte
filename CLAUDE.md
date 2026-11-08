@@ -26,3 +26,5 @@ App para estudiantes de la Universidad de Córdoba (Montería, Colombia) que ayu
 ## Estado actual
 
 Pantalla inicial "¿A dónde vas?" (`src/app/index.tsx`) + flujo de 5 pantallas con datos de muestra (`src/data`). Sin backend. La ubicación del usuario (`src/location/useUserLocation.ts`, solo primer plano) se guarda en memoria como origen del viaje y no se envía a ningún lado. Destinos en `src/data/destinations.ts` (hoy solo Unicórdoba sede Montería; no agregar otras sedes hasta que se pida). Mapa real con `react-native-maps` y recorrido de muestra (`src/data/geo.ts`); el mapa ilustrativo (`StaticRouteMap`) queda como respaldo sin conexión y en web.
+
+Build de Android con EAS (`eas.json`: perfiles `preview` = APK interno y `production` = AAB). Paquete `com.erinberht.mibus`. La clave `GOOGLE_MAPS_ANDROID_API_KEY` va en `.env.local` (local, ignorado por git) y como variable de entorno de EAS (`sensitive`, entornos preview y production) para los builds en la nube. R8 desactivado en Android (`expo-build-properties`) porque rompía WorkManager al arrancar.
