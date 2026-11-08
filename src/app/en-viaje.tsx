@@ -14,6 +14,7 @@ import { RouteMap } from '../components/RouteMap';
 import { ScreenLayout } from '../components/ScreenLayout';
 import { OCCUPANCY_LABEL } from '../data/live';
 import { getRouteOrDefault } from '../data/repository';
+import { tripOptionFor, useRoutePlan } from '../planner/useRoutePlan';
 import { useTrip } from '../state/trip';
 import { colors, fonts, fontSize, lineHeight, radius } from '../theme';
 import type { Occupancy } from '../types';
@@ -28,6 +29,7 @@ const OPTIONS: { value: Occupancy; icon: LucideIcon }[] = [
 export default function InTripScreen() {
   const { routeId, origin, occupancy, setOccupancy, setSharing } = useTrip();
   const route = getRouteOrDefault(routeId);
+  const boardStopId = tripOptionFor(useRoutePlan(), route.id)?.boardStop.id;
 
   return (
     <ScreenLayout
@@ -47,7 +49,13 @@ export default function InTripScreen() {
           <Text style={styles.liveTitle}>Compartiendo tu recorrido en vivo</Text>
           <LiveBadge />
         </View>
-        <RouteMap height={228} busLabel={route.shortName} routeId={route.id} origin={origin} />
+        <RouteMap
+          height={228}
+          busLabel={route.shortName}
+          routeId={route.id}
+          origin={origin}
+          boardStopId={boardStopId}
+        />
       </View>
 
       <View style={styles.card}>

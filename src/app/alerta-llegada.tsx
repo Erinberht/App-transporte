@@ -10,6 +10,7 @@ import { ScreenLayout } from '../components/ScreenLayout';
 import { SAMPLE_ADS } from '../data/ads';
 import { getLiveStatus, OCCUPANCY_LABEL } from '../data/live';
 import { getRouteOrDefault } from '../data/repository';
+import { tripOptionFor, useRoutePlan } from '../planner/useRoutePlan';
 import { useTrip } from '../state/trip';
 import { colors, fonts, fontSize, radius } from '../theme';
 
@@ -17,6 +18,7 @@ import { colors, fonts, fontSize, radius } from '../theme';
 export default function ArrivalAlertScreen() {
   const { routeId, origin, occupancy, reset } = useTrip();
   const route = getRouteOrDefault(routeId);
+  const boardStopId = tripOptionFor(useRoutePlan(), route.id)?.boardStop.id;
   const [choice, setChoice] = useState<'wait' | 'search'>('wait');
 
   return (
@@ -41,7 +43,13 @@ export default function ArrivalAlertScreen() {
         </Text>
       </View>
 
-      <RouteMap height={192} busLabel={route.shortName} routeId={route.id} origin={origin} />
+      <RouteMap
+        height={192}
+        busLabel={route.shortName}
+        routeId={route.id}
+        origin={origin}
+        boardStopId={boardStopId}
+      />
 
       <View style={styles.occupancy}>
         <Users size={24} color={colors.primary} />

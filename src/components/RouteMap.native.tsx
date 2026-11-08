@@ -14,12 +14,15 @@ const USER_MARKER_WIDTH = 120;
 
 // Mapa real de Montería (react-native-maps: Apple Maps en iOS, Google Maps en Android).
 // Sin conexión se muestra el mapa ilustrativo, que no necesita descargar teselas.
-export function RouteMap({ height, busLabel, routeId, origin }: RouteMapProps) {
+export function RouteMap({ height, busLabel, routeId, origin, boardStopId }: RouteMapProps) {
   const network = useNetworkState();
   // Mientras el estado de red no se conoce (undefined) se asume que hay conexión.
   const offline = network.isConnected === false || network.isInternetReachable === false;
   const mapRef = useRef<MapView>(null);
-  const data = useMemo(() => tripMapData(routeId, origin), [routeId, origin]);
+  const data = useMemo(
+    () => tripMapData(routeId, origin, undefined, boardStopId),
+    [routeId, origin, boardStopId],
+  );
 
   if (offline) return <StaticRouteMap height={height} busLabel={busLabel} offline />;
 

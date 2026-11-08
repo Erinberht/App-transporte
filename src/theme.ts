@@ -17,6 +17,9 @@ export const colors = {
 
   danger: '#9E504C',
   dangerSoft: '#FCEDEC',
+  // Advertencia ("Llegas justo"). No está en el Figma: tono ámbar con contraste AA sobre su fondo.
+  warning: '#8A5A00',
+  warningSoft: '#FDF3DC',
   route: '#D36D68',
 
   mapBase: '#F0F1EC',
