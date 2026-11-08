@@ -43,6 +43,38 @@ El workflow `.github/workflows/ci.yml` corre typecheck, lint, formato y tests en
 
 Si `expo start` avisa de versiones incompatibles, ejecuta `npx expo install --fix` (ajusta `react-native-screens` y `react-native-safe-area-context` al SDK).
 
+## Compilar para Android (EAS Build)
+
+La app se compila en la nube con EAS; no hace falta Android Studio. Paquete de Android: `com.erinberht.mibus`.
+
+Perfiles en `eas.json`:
+
+- `preview`: APK para instalar directo en el celular (distribución interna, piloto).
+- `production`: AAB para Google Play.
+
+Primera vez:
+
+```bash
+npx eas-cli@latest login     # cuenta de Expo (gratis en expo.dev)
+npx eas-cli@latest init      # vincula el proyecto con tu cuenta
+```
+
+La clave de Google Maps no viaja en `.env.local` (no se sube a EAS). Créala como variable de entorno de EAS en los entornos que use cada perfil:
+
+```bash
+npx eas-cli@latest env:set --name GOOGLE_MAPS_ANDROID_API_KEY --value <clave> --environment preview --environment production --visibility sensitive
+```
+
+Compilar el APK de prueba:
+
+```bash
+npx eas-cli@latest build --platform android --profile preview
+```
+
+Al terminar, EAS da un enlace y un QR para descargar el APK. Después, en Google Cloud, restringe la clave a **Apps para Android** con el paquete `com.erinberht.mibus` y la huella SHA-1 que muestra `npx eas-cli@latest credentials --platform android`.
+
+R8 (minificación) está desactivado en los builds de Android con `expo-build-properties` (`app.json`): con R8 activo la app se cerraba al abrir porque WorkManager no encontraba su base de datos interna. El proyecto de Google Cloud debe tener la facturación activa y **Maps SDK for Android** habilitado; si no, el mapa se ve negro (`Authorization failure` en `adb logcat`).
+
 ## Stack
 
 Expo SDK 58 · React Native · TypeScript · Expo Router. Los colores y medidas salen del Figma y están en `src/theme.ts`.
