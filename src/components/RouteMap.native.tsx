@@ -36,6 +36,8 @@ export function RouteMap({ height, busLabel }: RouteMapProps) {
         toolbarEnabled={false}
         showsPointsOfInterests={false}
         showsCompass={false}
+        // La app es de tema claro (app.json: userInterfaceStyle "light"); el mapa no sigue el modo oscuro del sistema.
+        userInterfaceStyle="light"
       >
         <Polyline
           coordinates={SAMPLE_ROUTE_PATH}
