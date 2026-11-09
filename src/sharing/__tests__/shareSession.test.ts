@@ -45,6 +45,7 @@ function setup(permission: LocationMode | 'denied' | 'services_off' = 'backgroun
     endTrip: jest.fn(async () => {}),
     sendPosition: jest.fn(async () => {}),
     reportOccupancy: jest.fn(async () => {}),
+    reportIncident: jest.fn(async () => {}),
   } satisfies ShareBackend;
   let hasBackend = true;
   const session = createShareSession({
@@ -344,6 +345,43 @@ describe('reportar el cupo', () => {
   });
 });
 
+describe('reportar incidentes', () => {
+  it('cada tipo una vez por viaje', async () => {
+    const t = setup();
+    await t.session.start(OPTIONS);
+    expect(await t.session.reportIncident('broken_down')).toEqual({ kind: 'sent' });
+    expect(t.backend.reportIncident).toHaveBeenCalledWith('trip-1', 'P3', 'broken_down');
+    expect(t.session.hasReported('broken_down')).toBe(true);
+    expect(await t.session.reportIncident('broken_down')).toEqual({ kind: 'already_reported' });
+    expect(await t.session.reportIncident('big_delay')).toEqual({ kind: 'sent' });
+    expect(t.backend.reportIncident).toHaveBeenCalledTimes(2);
+  });
+
+  it('sin compartir no se puede; sin conexión se puede reintentar', async () => {
+    const t = setup();
+    expect(await t.session.reportIncident('detour')).toEqual({ kind: 'not_sharing' });
+    await t.session.start(OPTIONS);
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    t.backend.reportIncident.mockRejectedValueOnce(new Error('Network request failed'));
+    expect(await t.session.reportIncident('detour')).toEqual({ kind: 'offline' });
+    expect(await t.session.reportIncident('detour')).toEqual({ kind: 'sent' });
+    warn.mockRestore();
+  });
+
+  it('marca el viaje como "quieto" tras 5 minutos sin moverse sobre el recorrido', async () => {
+    const t = setup();
+    await t.session.start(OPTIONS);
+    for (let s = 0; s < 290; s += 10) await t.gps(s * 1000, onRoute(500), 0);
+    expect(t.session.getStatus()).toMatchObject({ state: 'sharing', stuck: false });
+    for (let s = 290; s <= 310; s += 10) await t.gps(s * 1000, onRoute(500), 0);
+    expect(t.session.getStatus()).toMatchObject({ state: 'sharing', stuck: true });
+    // Vuelve a andar: deja de estar quieto.
+    await t.gps(320_000, onRoute(600), 8);
+    await t.gps(330_000, onRoute(700), 8);
+    expect(t.session.getStatus()).toMatchObject({ stuck: false });
+  });
+});
+
 describe('shareMessage', () => {
   it('muestra hace cuánto fue el último envío', () => {
     const status = {
@@ -354,6 +392,7 @@ describe('shareMessage', () => {
       startedAt: 0,
       lastSentAt: 1_000,
       problem: null,
+      stuck: false,
     } as const;
     expect(shareMessage(status, 9_000).body).toBe('Último envío hace 8 s.');
     expect(shareMessage(status, 181_000).body).toBe('Último envío hace 3 min.');

@@ -7,7 +7,9 @@
 import { distanceMeters, type LatLng } from '../data/geo';
 import { isInMonteria } from '../data/validate';
 import type { Occupancy } from '../types';
+import type { IncidentKind } from '../api/transit';
 import {
+  detectStuck,
   detectTripEnd,
   MAX_ACCURACY_METERS,
   pruneSamples,
@@ -39,7 +41,17 @@ export interface ShareBackend {
   sendPosition(tripId: string, sample: LocationSample): Promise<void>;
   /** Debe lanzar name 'OccupancyLimitError' con `reason` si el servidor aplica su límite. */
   reportOccupancy(tripId: string, routeId: string, level: Occupancy): Promise<void>;
+  /** Debe lanzar name 'IncidentLimitError' con `reason` si el servidor aplica su límite. */
+  reportIncident(tripId: string, routeId: string, kind: IncidentKind): Promise<void>;
 }
+
+/** Resultado de reportar un incidente (Se varó / Cambió de ruta / Va muy retrasada). */
+export type IncidentReportResult =
+  | { kind: 'sent' }
+  /** Ya lo reportaste en este viaje. */
+  | { kind: 'already_reported' }
+  | { kind: 'not_sharing' }
+  | { kind: 'offline' };
 
 /** Resultado de reportar el cupo. */
 export type OccupancyReportResult =
@@ -90,6 +102,8 @@ export type ShareStatus =
       lastSentAt: number | null;
       /** Por qué falló el último envío (se reintenta con la próxima lectura), o null. */
       problem: SendProblem | null;
+      /** El bus lleva 5 min quieto sobre el recorrido: se pregunta "¿Se varó el bus?". */
+      stuck: boolean;
     }
   | {
       state: 'ended';
@@ -137,6 +151,7 @@ export function createShareSession(deps: {
   let sending = false;
   let lastOptions: StartOptions | null = null;
   let occupancy = { tripId: '', count: 0, lastAt: 0 };
+  let incidents = { tripId: '', kinds: new Set<IncidentKind>() };
 
   function set(next: ShareStatus) {
     status = next;
@@ -191,6 +206,7 @@ export function createShareSession(deps: {
       startedAt,
       lastSentAt: null,
       problem: null,
+      stuck: false,
     });
     try {
       await deps.tracker.start(mode, options.label, handleSamples);
@@ -214,6 +230,9 @@ export function createShareSession(deps: {
       finish(end);
       return;
     }
+
+    const stuck = detectStuck(history, { ...context, startedAt: status.startedAt }, t);
+    if (stuck !== status.stuck) set({ ...status, stuck });
 
     const latest = samples
       .filter((s) => s.accuracy === null || s.accuracy <= MAX_ACCURACY_METERS)
@@ -310,6 +329,31 @@ export function createShareSession(deps: {
     }
   }
 
+  async function reportIncident(kind: IncidentKind): Promise<IncidentReportResult> {
+    const backend = deps.backend();
+    if (status.state !== 'sharing' || !backend) return { kind: 'not_sharing' };
+    const { tripId, routeId } = status;
+    if (incidents.tripId !== tripId) incidents = { tripId, kinds: new Set() };
+    if (incidents.kinds.has(kind)) return { kind: 'already_reported' };
+    try {
+      await backend.reportIncident(tripId, routeId, kind);
+      incidents.kinds.add(kind);
+      return { kind: 'sent' };
+    } catch (e) {
+      const err = e as { name?: string; reason?: string };
+      console.warn('[incidente] reporte fallido:', err.name ?? '', err.reason ?? '');
+      if (err.name === 'TripClosedError') {
+        await finish('timeout', { skipServer: true });
+        return { kind: 'not_sharing' };
+      }
+      if (err.name === 'IncidentLimitError') {
+        incidents.kinds.add(kind);
+        return { kind: 'already_reported' };
+      }
+      return { kind: 'offline' };
+    }
+  }
+
   async function finish(
     reason: EndReason,
     opts: { skipServer?: boolean; error?: ShareError } = {},
@@ -346,6 +390,11 @@ export function createShareSession(deps: {
     retry: () => (lastOptions ? start(lastOptions) : Promise.resolve()),
     /** Reporta el cupo (Lleno / Medio / Vacío) en el viaje activo. */
     reportOccupancy,
+    /** Reporta un incidente del bus en el viaje activo. */
+    reportIncident,
+    /** Si ya se reportó este incidente en el viaje actual. */
+    hasReported: (kind: IncidentKind) =>
+      status.state === 'sharing' && incidents.tripId === status.tripId && incidents.kinds.has(kind),
     /** "Dejar de compartir". */
     stop: () => finish('user'),
     /** Vuelve al estado inicial (al terminar el flujo del viaje). Detiene si seguía. */

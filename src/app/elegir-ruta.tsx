@@ -17,7 +17,10 @@ import {
   type RouteOption,
 } from '../planner/recommend';
 import { tripOptionFor, useRoutePlan } from '../planner/useRoutePlan';
+import { blockedRoutes } from '../planner/disruption';
+import { incidentText } from '../sharing/incidentText';
 import { occupancyText } from '../sharing/occupancyText';
+import { useLiveIncidents } from '../sharing/useLiveIncidents';
 import { useLiveOccupancy } from '../sharing/useLiveOccupancy';
 import { useTrip } from '../state/trip';
 import { colors, fonts, fontSize, radius } from '../theme';
@@ -38,7 +41,12 @@ export default function ChooseRouteScreen() {
   const ordered: { routeId: string; option?: RouteOption }[] = plan
     ? plan.options.map((option) => ({ routeId: option.routeId, option }))
     : routes.map((r) => ({ routeId: r.id }));
-  const best = plan?.options[0]?.kind === 'trip' ? plan.options[0] : undefined;
+  const incidents = useLiveIncidents();
+  const blocked = blockedRoutes(incidents);
+  // La recomendada: la primera que no tenga una buseta varada o desviada reportada.
+  const best = plan?.options.find(
+    (o): o is Extract<typeof o, { kind: 'trip' }> => o.kind === 'trip' && !blocked.has(o.routeId),
+  );
   const selectedOption = tripOptionFor(plan, routeId);
   const occupancy = useLiveOccupancy().byRoute;
   const now = useNow(30_000);
@@ -161,6 +169,13 @@ export default function ChooseRouteScreen() {
                 {unavailable ? (
                   <Text style={styles.detailMuted}>{unavailableLabel(unavailable)}</Text>
                 ) : null}
+                {incidents
+                  .filter((i) => i.routeId === id)
+                  .map((i) => (
+                    <Text key={i.kind} style={styles.incident}>
+                      ⚠ {incidentText(i, route.shortName, now)}
+                    </Text>
+                  ))}
                 {occupancy[id] ? (
                   <Text style={styles.detailMuted}>{occupancyText(occupancy[id], now)}</Text>
                 ) : null}
@@ -239,6 +254,7 @@ const styles = StyleSheet.create({
   tagText: { fontFamily: fonts.semibold, fontSize: fontSize.caption },
   longName: { fontFamily: fonts.regular, fontSize: fontSize.small, color: colors.textMuted },
   detail: { fontFamily: fonts.medium, fontSize: fontSize.small, color: colors.text },
+  incident: { fontFamily: fonts.medium, fontSize: fontSize.caption, color: colors.danger },
   detailMuted: { fontFamily: fonts.regular, fontSize: fontSize.caption, color: colors.textMuted },
   selectedText: { fontFamily: fonts.regular, fontSize: fontSize.caption, color: colors.primary },
   radio: {

@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
 import {
+  AlertTriangle,
   ArrowRight,
   RotateCcw,
   Settings,
@@ -22,8 +23,10 @@ import { useNow } from '../lib/useNow';
 import { tripOptionFor, useRoutePlan } from '../planner/useRoutePlan';
 import { liveShare, useShareStatus } from '../sharing/liveShare';
 import { shareMessage, type ShareTone } from '../sharing/messages';
+import { INCIDENT_LABEL } from '../sharing/incidentText';
 import { occupancyText } from '../sharing/occupancyText';
-import type { OccupancyReportResult } from '../sharing/shareSession';
+import type { IncidentReportResult, OccupancyReportResult } from '../sharing/shareSession';
+import type { IncidentKind } from '../api/transit';
 import { useLiveOccupancy } from '../sharing/useLiveOccupancy';
 import { linkedBusFor, useTrip } from '../state/trip';
 import { colors, fonts, fontSize, lineHeight, radius } from '../theme';
@@ -64,6 +67,27 @@ export function reportFeedback(
   }
 }
 
+const INCIDENTS: IncidentKind[] = ['broken_down', 'detour', 'big_delay'];
+
+export function incidentFeedback(
+  result: IncidentReportResult,
+  routeName: string,
+): { text: string; tone: ShareTone } {
+  switch (result.kind) {
+    case 'sent':
+      return {
+        text: `Gracias. Avisamos a quienes esperan la ${routeName} y les sugerimos otra ruta.`,
+        tone: 'success',
+      };
+    case 'already_reported':
+      return { text: 'Ya lo reportaste en este viaje.', tone: 'muted' };
+    case 'not_sharing':
+      return { text: 'Solo se puede reportar mientras compartes tu recorrido.', tone: 'warning' };
+    case 'offline':
+      return { text: 'Sin conexión: no se envió. Intenta de nuevo.', tone: 'danger' };
+  }
+}
+
 // "En viaje"
 export default function InTripScreen() {
   const { routeId, origin, occupancy, setOccupancy, bus: scannedBus } = useTrip();
@@ -78,6 +102,22 @@ export default function InTripScreen() {
   const others = (bus && live.byBus[bus.id]) || live.byRoute[route.id];
   const [feedback, setFeedback] = useState<{ text: string; tone: ShareTone } | null>(null);
   const [sending, setSending] = useState(false);
+  const [incidentNote, setIncidentNote] = useState<{ text: string; tone: ShareTone } | null>(null);
+  // "No, es el tráfico": no volver a preguntar en este viaje.
+  const [stuckDismissed, setStuckDismissed] = useState(false);
+  const askStuck =
+    share.state === 'sharing' &&
+    share.stuck &&
+    !stuckDismissed &&
+    !liveShare.hasReported('broken_down');
+
+  async function reportProblem(kind: IncidentKind) {
+    if (sending) return;
+    setSending(true);
+    const result = await liveShare.reportIncident(kind);
+    setSending(false);
+    setIncidentNote(incidentFeedback(result, route.shortName));
+  }
 
   async function report(level: Occupancy) {
     if (sending) return;
@@ -127,6 +167,30 @@ export default function InTripScreen() {
             </Text>
           </Pressable>
         ) : null}
+        {askStuck ? (
+          <View style={styles.stuck} accessibilityLiveRegion="assertive">
+            <AlertTriangle size={18} color={colors.warning} />
+            <View style={styles.stuckBody}>
+              <Text style={styles.stuckTitle}>El bus lleva 5 min sin moverse. ¿Se varó?</Text>
+              <View style={styles.stuckActions}>
+                <Pressable
+                  accessibilityRole="button"
+                  style={styles.action}
+                  onPress={() => reportProblem('broken_down')}
+                >
+                  <Text style={styles.actionText}>Sí, se varó</Text>
+                </Pressable>
+                <Pressable
+                  accessibilityRole="button"
+                  style={styles.action}
+                  onPress={() => setStuckDismissed(true)}
+                >
+                  <Text style={styles.actionText}>No, es el tráfico</Text>
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        ) : null}
         <RouteMap
           height={228}
           busLabel={route.shortName}
@@ -173,6 +237,31 @@ export default function InTripScreen() {
           {occupancyText(others, now)}
         </Text>
       </View>
+
+      {share.state === 'sharing' ? (
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>¿Pasa algo con el bus?</Text>
+          <View style={styles.problems}>
+            {INCIDENTS.map((kind) => (
+              <Pressable
+                key={kind}
+                accessibilityRole="button"
+                disabled={sending}
+                onPress={() => reportProblem(kind)}
+                style={styles.problem}
+              >
+                <Text style={styles.problemText}>{INCIDENT_LABEL[kind]}</Text>
+              </Pressable>
+            ))}
+          </View>
+          <Text
+            style={[styles.confirm, incidentNote && { color: TONES[incidentNote.tone] }]}
+            accessibilityLiveRegion="polite"
+          >
+            {incidentNote?.text ?? 'Avisa a quienes esperan esta ruta en las siguientes paradas.'}
+          </Text>
+        </View>
+      ) : null}
 
       <View style={styles.autoStop}>
         <ShieldCheck size={20} color={colors.success} />
@@ -243,6 +332,27 @@ const styles = StyleSheet.create({
   optionLabel: { fontFamily: fonts.medium, fontSize: fontSize.body, color: colors.textMuted },
   optionLabelSelected: { fontFamily: fonts.semibold, color: colors.primary },
   confirm: { fontFamily: fonts.regular, fontSize: fontSize.caption, color: colors.textMuted },
+  problems: { gap: 8 },
+  problem: {
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: radius.sm,
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  problemText: { fontFamily: fonts.medium, fontSize: fontSize.body, color: colors.text },
+  stuck: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    padding: 12,
+    borderRadius: radius.sm,
+    backgroundColor: colors.warningSoft,
+  },
+  stuckBody: { flex: 1, gap: 8 },
+  stuckTitle: { fontFamily: fonts.semibold, fontSize: fontSize.body, color: colors.warning },
+  stuckActions: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
   autoStop: {
     flexDirection: 'row',
     alignItems: 'flex-start',

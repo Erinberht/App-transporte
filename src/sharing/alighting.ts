@@ -103,3 +103,26 @@ export function detectTripEnd(
   }
   return null;
 }
+
+/** Más lento que esto se considera quieto (3,6 km/h). */
+export const STUCK_SPEED_MPS = 1;
+/** Cuánto tiempo quieto sobre el recorrido para preguntar "¿Se varó el bus?". */
+export const STUCK_WINDOW_MS = 5 * 60_000;
+
+/**
+ * El bus lleva 5 minutos quieto SOBRE el recorrido y lejos de la parada de bajada: puede
+ * estar varado (o en un trancón). Solo sirve para preguntarle al viajero, no para decidir.
+ */
+export function detectStuck(samples: LocationSample[], trip: TripContext, now: number): boolean {
+  const good = pruneSamples(samples, now).sort((a, b) => a.timestamp - b.timestamp);
+  const from = windowStart(good, now, STUCK_WINDOW_MS, 4);
+  if (from === null) return false;
+  const v = speeds(good);
+  const recent = good.slice(from);
+  if (!v.slice(from).every((s) => s < STUCK_SPEED_MPS)) return false;
+  if (!recent.every((s) => distanceToPathMeters(s.coordinate, trip.path) <= OFF_ROUTE_METERS)) {
+    return false;
+  }
+  const last = recent[recent.length - 1];
+  return !trip.alightStop || distanceMeters(last.coordinate, trip.alightStop) > AT_STOP_METERS;
+}
