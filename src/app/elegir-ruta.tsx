@@ -9,6 +9,7 @@ import { ScreenLayout } from '../components/ScreenLayout';
 import { SAMPLE_ADS } from '../data/ads';
 import { routesRepository } from '../data/repository';
 import { dateToClassTime, formatClassTime } from '../lib/classTime';
+import { useNow } from '../lib/useNow';
 import {
   arrivalLabel,
   unavailableLabel,
@@ -16,6 +17,8 @@ import {
   type RouteOption,
 } from '../planner/recommend';
 import { tripOptionFor, useRoutePlan } from '../planner/useRoutePlan';
+import { occupancyText } from '../sharing/occupancyText';
+import { useLiveOccupancy } from '../sharing/useLiveOccupancy';
 import { useTrip } from '../state/trip';
 import { colors, fonts, fontSize, radius } from '../theme';
 
@@ -37,6 +40,8 @@ export default function ChooseRouteScreen() {
     : routes.map((r) => ({ routeId: r.id }));
   const best = plan?.options[0]?.kind === 'trip' ? plan.options[0] : undefined;
   const selectedOption = tripOptionFor(plan, routeId);
+  const occupancy = useLiveOccupancy().byRoute;
+  const now = useNow(30_000);
 
   // Preseleccionar la mejor ruta, salvo que el usuario ya haya elegido otra en esta pantalla.
   const userPicked = useRef(false);
@@ -155,6 +160,9 @@ export default function ChooseRouteScreen() {
                 ) : null}
                 {unavailable ? (
                   <Text style={styles.detailMuted}>{unavailableLabel(unavailable)}</Text>
+                ) : null}
+                {occupancy[id] ? (
+                  <Text style={styles.detailMuted}>{occupancyText(occupancy[id], now)}</Text>
                 ) : null}
                 {selected ? <Text style={styles.selectedText}>Ruta seleccionada</Text> : null}
               </View>

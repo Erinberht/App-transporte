@@ -99,11 +99,17 @@ describe('Pantallas del flujo', () => {
     await open('/en-viaje');
 
     expect(screen.getByText('Estás en viaje')).toBeOnTheScreen();
-    expect(screen.getByText('Cupo medio seleccionado')).toBeOnTheScreen();
+    expect(
+      screen.getByText('Toca una opción para avisar a quienes esperan este bus.'),
+    ).toBeOnTheScreen();
+    expect(screen.getByText('En la ruta: Sin reportes de cupo recientes')).toBeOnTheScreen();
     expect(screen.queryByText('Anuncio')).not.toBeOnTheScreen();
 
+    // Sin compartir no hay viaje en el servidor: no se puede enviar y lo dice.
     await fireEvent.press(screen.getByText('Lleno'));
-    expect(screen.getByText('Cupo lleno seleccionado')).toBeOnTheScreen();
+    expect(
+      await screen.findByText('El cupo se envía solo mientras compartes tu recorrido.'),
+    ).toBeOnTheScreen();
 
     // Se abrió sin pulsar "Compartir": no hay nada que detener.
     expect(screen.getByText('No estás compartiendo')).toBeOnTheScreen();

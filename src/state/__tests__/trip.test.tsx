@@ -3,11 +3,11 @@ import { act, renderHook } from '@testing-library/react-native';
 import { TripProvider, useTrip } from '../trip';
 
 describe('TripProvider / useTrip', () => {
-  it('arranca con la ruta T2 y cupo medio', async () => {
+  it('arranca con la ruta T2 y sin cupo reportado', async () => {
     const { result } = await renderHook(() => useTrip(), { wrapper: TripProvider });
 
     expect(result.current.routeId).toBe('T2');
-    expect(result.current.occupancy).toBe('medium');
+    expect(result.current.occupancy).toBeNull();
   });
 
   it('actualiza ruta y cupo', async () => {
@@ -30,7 +30,7 @@ describe('TripProvider / useTrip', () => {
     await act(() => result.current.reset());
 
     expect(result.current.routeId).toBe('T2');
-    expect(result.current.occupancy).toBe('medium');
+    expect(result.current.occupancy).toBeNull();
   });
 
   it('arranca con la sede Montería, entrada a las 7:00 y sin origen', async () => {

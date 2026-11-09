@@ -14,8 +14,11 @@ import {
   ensureAnonymousSession,
   fetchRouteLiveBuses,
   fetchRouteLiveStatus,
+  fetchLiveOccupancy,
   fetchTransitDataset,
   lookupBus,
+  OccupancyLimitError,
+  reportOccupancy,
   PositionRejectedError,
   sendTripPosition,
   startSharedTrip,
@@ -159,5 +162,32 @@ describe('backend local', () => {
     const { data } = await client.from('shared_trips').select('bus_id').eq('id', tripId).single();
     expect(data?.bus_id).toBe(bus!.id);
     await deleteMyData(client);
+  });
+
+  it('cupo: un voto por viajero, por ruta y por buseta, con límite de 2 minutos', async () => {
+    const anon = newClient();
+    const bus = await lookupBus(anon, 'PRUEBA-AE-01');
+    const a = newClient();
+    const b = newClient();
+    const tripA = await startSharedTrip(a, 'AE', bus!.id);
+    const tripB = await startSharedTrip(b, 'AE');
+
+    await reportOccupancy(a, tripA, 'AE', 'full');
+    await reportOccupancy(b, tripB, 'AE', 'full');
+    await expect(reportOccupancy(a, tripA, 'AE', 'empty')).rejects.toMatchObject({
+      name: 'OccupancyLimitError',
+      reason: 'too_soon',
+    });
+    await expect(reportOccupancy(a, tripA, 'AE', 'empty')).rejects.toBeInstanceOf(
+      OccupancyLimitError,
+    );
+
+    const live = await fetchLiveOccupancy(anon);
+    expect(live.byRoute.AE).toMatchObject({ level: 'full', reports: 2 });
+    expect(live.byBus[bus!.id]).toMatchObject({ level: 'full', reports: 1 });
+
+    await deleteMyData(a);
+    await deleteMyData(b);
+    expect((await fetchLiveOccupancy(anon)).byRoute.AE).toBeUndefined();
   });
 });

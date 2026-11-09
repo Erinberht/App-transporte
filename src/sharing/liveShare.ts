@@ -2,7 +2,7 @@
 import { useSyncExternalStore } from 'react';
 
 import { getSupabase } from '../api/supabase';
-import { endSharedTrip, sendTripPosition, startSharedTrip } from '../api/transit';
+import { endSharedTrip, reportOccupancy, sendTripPosition, startSharedTrip } from '../api/transit';
 import { expoTracker } from './expoTracker';
 import { createShareSession, type ShareBackend, type ShareStatus } from './shareSession';
 
@@ -12,6 +12,7 @@ function supabaseBackend(): ShareBackend | null {
   return {
     startTrip: (routeId, busId) => startSharedTrip(client, routeId, busId),
     endTrip: (tripId, reason) => endSharedTrip(client, tripId, reason),
+    reportOccupancy: (tripId, routeId, level) => reportOccupancy(client, tripId, routeId, level),
     sendPosition: (tripId, s) =>
       sendTripPosition(client, tripId, {
         latitude: s.coordinate.latitude,

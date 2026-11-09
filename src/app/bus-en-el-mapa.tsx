@@ -1,5 +1,14 @@
 import { router } from 'expo-router';
-import { AlertTriangle, BusFront, Check, Clock3, Info, Radio, Search } from 'lucide-react-native';
+import {
+  AlertTriangle,
+  BusFront,
+  Check,
+  Clock3,
+  Info,
+  Radio,
+  Search,
+  Users,
+} from 'lucide-react-native';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { AdBanner } from '../components/AdBanner';
@@ -14,7 +23,9 @@ import { dateToClassTime, formatClassTime } from '../lib/classTime';
 import { useNow } from '../lib/useNow';
 import { arrivalLabel, type ArrivalStatus } from '../planner/recommend';
 import { tripOptionFor, useRoutePlan } from '../planner/useRoutePlan';
+import { occupancyText } from '../sharing/occupancyText';
 import { useLiveBuses } from '../sharing/useLiveBuses';
+import { useLiveOccupancy } from '../sharing/useLiveOccupancy';
 import { useTrip } from '../state/trip';
 import { colors, fonts, fontSize, lineHeight, radius } from '../theme';
 
@@ -39,6 +50,7 @@ export default function BusOnMapScreen() {
   const liveBuses = useLiveBuses(route.id);
   const travelers = liveBuses.reduce((sum, b) => sum + b.travelers, 0);
   const now = useNow(15_000);
+  const occupancy = useLiveOccupancy().byRoute[route.id];
 
   // Con ubicación, la hora sale del motor de recomendación; sin ella, del estado de muestra.
   const etaMinutes = option
@@ -100,6 +112,12 @@ export default function BusOnMapScreen() {
             </View>
           </View>
         ) : null}
+        <View style={styles.liveSource}>
+          <Users size={16} color={occupancy ? colors.primary : colors.textMuted} />
+          <Text style={[styles.liveSourceText, occupancy && styles.occupancyText]}>
+            {occupancyText(occupancy, now)}
+          </Text>
+        </View>
         <View style={styles.liveSource}>
           <Radio size={16} color={liveBuses.length ? colors.success : colors.textMuted} />
           <Text style={styles.liveSourceText}>
@@ -173,6 +191,7 @@ const styles = StyleSheet.create({
   tagText: { fontFamily: fonts.semibold, fontSize: fontSize.caption },
   liveSource: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   liveSourceText: { fontFamily: fonts.regular, fontSize: fontSize.small, color: colors.textMuted },
+  occupancyText: { fontFamily: fonts.medium, color: colors.text },
   late: {
     flexDirection: 'row',
     alignItems: 'flex-start',

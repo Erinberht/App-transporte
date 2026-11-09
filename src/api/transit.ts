@@ -229,3 +229,63 @@ export async function lookupBus(client: AppSupabaseClient, code: string): Promis
   if (error) throw new ApiError('No se pudo validar el bus', error);
   return data ? { id: data.id, code: data.code, routeId: data.route_id } : null;
 }
+
+export type OccupancyLevel = Database['public']['Enums']['occupancy_level'];
+
+/** El servidor no aceptó el reporte de cupo por sus límites (uno cada 2 min, máximo 10). */
+export class OccupancyLimitError extends ApiError {
+  constructor(
+    readonly reason: 'too_soon' | 'max_reached',
+    cause?: unknown,
+  ) {
+    super('El servidor no aceptó el reporte de cupo', cause);
+    this.name = 'OccupancyLimitError';
+  }
+}
+
+/** Reporta el cupo del bus en el viaje activo. */
+export async function reportOccupancy(
+  client: AppSupabaseClient,
+  tripId: string,
+  routeId: string,
+  level: OccupancyLevel,
+): Promise<void> {
+  const { error } = await client
+    .from('occupancy_reports')
+    .insert({ trip_id: tripId, route_id: routeId, level });
+  if (!error) return;
+  if (error.code === TRIP_CLOSED) throw new TripClosedError(error);
+  if (error.code === CHECK_VIOLATION) {
+    throw new OccupancyLimitError(
+      /máximo 10/i.test(error.message ?? '') ? 'max_reached' : 'too_soon',
+      error,
+    );
+  }
+  throw new ApiError('No se pudo enviar el cupo', error);
+}
+
+export type OccupancyInfo = {
+  level: OccupancyLevel;
+  /** Cuántos viajeros reportaron en los últimos 10 minutos (un voto por viajero). */
+  reports: number;
+  at: Date;
+};
+
+export type LiveOccupancy = {
+  byRoute: Record<string, OccupancyInfo>;
+  /** Solo de las busetas cuyos viajeros escanearon el QR. */
+  byBus: Record<string, OccupancyInfo>;
+};
+
+/** Cupo de los últimos 10 minutos de todas las rutas y busetas. No necesita sesión. */
+export async function fetchLiveOccupancy(client: AppSupabaseClient): Promise<LiveOccupancy> {
+  const { data, error } = await client.rpc('live_occupancy');
+  if (error) throw new ApiError('No se pudo consultar el cupo', error);
+  const result: LiveOccupancy = { byRoute: {}, byBus: {} };
+  for (const row of data ?? []) {
+    const info = { level: row.level, reports: row.reports, at: new Date(row.reported_at) };
+    if (row.bus_id) result.byBus[row.bus_id] = info;
+    else result.byRoute[row.route_id] = info;
+  }
+  return result;
+}
