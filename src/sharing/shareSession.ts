@@ -29,7 +29,7 @@ export interface LocationTracker {
 }
 
 export interface ShareBackend {
-  startTrip(routeId: string): Promise<string>;
+  startTrip(routeId: string, busId: string | null): Promise<string>;
   endTrip(tripId: string, reason: EndReason): Promise<void>;
   /**
    * Debe lanzar un error con name 'TripClosedError' si el servidor ya cerró el viaje, o con
@@ -83,6 +83,8 @@ export type StartOptions = {
   /** Recorrido de la ruta y parada de bajada: para detectar que el viajero bajó. */
   path: LatLng[];
   alightStop: LatLng | null;
+  /** Bus vinculado al escanear su QR (opcional). */
+  busId?: string | null;
 };
 
 /** Como mucho un envío cada 10 s... */
@@ -141,7 +143,7 @@ export function createShareSession(deps: {
 
     let tripId: string;
     try {
-      tripId = await backend.startTrip(routeId);
+      tripId = await backend.startTrip(routeId, options.busId ?? null);
     } catch {
       if (gen === generation) set({ state: 'error', routeId, error: 'network' });
       return;

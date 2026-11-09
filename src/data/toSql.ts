@@ -114,3 +114,26 @@ end $$;
 commit;
 `;
 }
+
+export type SeedBus = { code: string; routeId: string };
+
+/**
+ * SQL idempotente para las busetas (tabla buses), por código. Las que ya no estén en la
+ * lista no se borran (pueden tener viajes): se desactivan, y su QR deja de valer.
+ */
+export function busesToSql(buses: SeedBus[], source: string): string {
+  if (buses.length === 0) return '';
+  const codes = buses.map((b) => q(b.code)).join(', ');
+  return `
+-- Busetas desde ${source} (QR: docs/QR_FORMAT.md).
+begin;
+
+insert into public.buses (code, route_id, active) values
+${values(buses.map((b) => [q(b.code), q(b.routeId), 'true']))}
+on conflict (code) do update set route_id = excluded.route_id, active = true;
+
+update public.buses set active = false where code not in (${codes});
+
+commit;
+`;
+}

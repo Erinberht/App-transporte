@@ -10,7 +10,7 @@ function supabaseBackend(): ShareBackend | null {
   const client = getSupabase();
   if (!client) return null;
   return {
-    startTrip: (routeId) => startSharedTrip(client, routeId),
+    startTrip: (routeId, busId) => startSharedTrip(client, routeId, busId),
     endTrip: (tripId, reason) => endSharedTrip(client, tripId, reason),
     sendPosition: (tripId, s) =>
       sendTripPosition(client, tripId, {
