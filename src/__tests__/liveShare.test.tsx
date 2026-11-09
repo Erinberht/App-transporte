@@ -60,7 +60,7 @@ describe('Compartir mi recorrido', () => {
     expect(await screen.findByText('Compartiendo tu recorrido en vivo')).toBeOnTheScreen();
     // El mock no da permiso "todo el tiempo": comparte solo con la app abierta.
     expect(screen.getByText(/Mantén la app abierta/)).toBeOnTheScreen();
-    expect(api.startSharedTrip).toHaveBeenCalledWith(expect.anything(), 'T2');
+    expect(api.startSharedTrip).toHaveBeenCalledWith(expect.anything(), 'T2', null);
 
     await act(async () => {
       onLocation({

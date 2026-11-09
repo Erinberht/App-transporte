@@ -15,6 +15,7 @@ import {
   fetchRouteLiveBuses,
   fetchRouteLiveStatus,
   fetchTransitDataset,
+  lookupBus,
   PositionRejectedError,
   sendTripPosition,
   startSharedTrip,
@@ -142,5 +143,21 @@ describe('backend local', () => {
 
     await deleteMyData(a);
     await deleteMyData(b);
+  });
+
+  it('QR del bus: se consulta sin sesión y el viaje queda vinculado solo a un bus de su ruta', async () => {
+    const anon = newClient();
+    const bus = await lookupBus(anon, 'PRUEBA-P2-01');
+    expect(bus).toEqual({ id: expect.any(String), code: 'PRUEBA-P2-01', routeId: 'P2' });
+    expect(await lookupBus(anon, 'NO-EXISTE')).toBeNull();
+
+    const client = newClient();
+    await expect(startSharedTrip(client, 'T2', bus!.id)).rejects.toThrow(
+      'No se pudo empezar a compartir',
+    );
+    const tripId = await startSharedTrip(client, 'P2', bus!.id);
+    const { data } = await client.from('shared_trips').select('bus_id').eq('id', tripId).single();
+    expect(data?.bus_id).toBe(bus!.id);
+    await deleteMyData(client);
   });
 });

@@ -30,6 +30,13 @@
       "expo-asset",
       "expo-sqlite",
       [
+        "expo-camera",
+        {
+          "cameraPermission": "Mi bus usa la cámara solo para leer el QR pegado en el bus. No toma ni guarda fotos.",
+          "recordAudioAndroid": false
+        }
+      ],
+      [
         "expo-location",
         {
           "locationWhenInUsePermission": "Mi bus usa tu ubicación para sugerirte la parada y la ruta más cercanas y, si eliges compartir tu recorrido, para mostrar dónde va el bus. Solo se envía mientras compartes.",

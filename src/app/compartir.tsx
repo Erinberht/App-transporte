@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { ChevronRight, QrCode, Radio, ShieldCheck } from 'lucide-react-native';
+import { ChevronRight, CircleCheck, QrCode, Radio, ShieldCheck } from 'lucide-react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { RouteMap } from '../components/RouteMap';
@@ -7,13 +7,14 @@ import { ScreenLayout } from '../components/ScreenLayout';
 import { getRouteOrDefault, routesRepository } from '../data/repository';
 import { tripOptionFor, useRoutePlan } from '../planner/useRoutePlan';
 import { liveShare } from '../sharing/liveShare';
-import { useTrip } from '../state/trip';
+import { linkedBusFor, useTrip } from '../state/trip';
 import { colors, fonts, fontSize, lineHeight, radius } from '../theme';
 
 // Paso 3 de 5 · "Compartir recorrido"
 export default function ShareTripScreen() {
-  const { routeId, origin } = useTrip();
+  const { routeId, origin, bus: scannedBus } = useTrip();
   const route = getRouteOrDefault(routeId);
+  const bus = linkedBusFor(scannedBus, route.id);
   const option = tripOptionFor(useRoutePlan(), route.id);
   const boardStopId = option?.boardStop.id;
 
@@ -33,6 +34,7 @@ export default function ShareTripScreen() {
           label: `Ruta ${route.shortName}`,
           path: routesRepository.getPattern(route.id)?.shape ?? [],
           alightStop: (option?.alightStop ?? stops[stops.length - 1])?.coordinate ?? null,
+          busId: bus?.id ?? null,
         });
         router.push('/en-viaje');
       }}
@@ -58,12 +60,24 @@ export default function ShareTripScreen() {
         </Text>
       </View>
 
-      {/* TODO: abrir el escáner (expo-camera) y validar el QR del bus. */}
-      <Pressable accessibilityRole="button" style={styles.qr}>
-        <QrCode size={32} color={colors.primary} />
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={
+          bus ? `Bus ${bus.code} vinculado. Escanear otro QR` : 'Escanear el QR del bus, opcional'
+        }
+        style={[styles.qr, bus && styles.qrLinked]}
+        onPress={() => router.push('/escanear-qr')}
+      >
+        {bus ? (
+          <CircleCheck size={32} color={colors.success} />
+        ) : (
+          <QrCode size={32} color={colors.primary} />
+        )}
         <View style={styles.qrText}>
-          <Text style={styles.qrTitle}>Escanear el QR del bus</Text>
-          <Text style={styles.qrSub}>Opcional · Puedes continuar sin él</Text>
+          <Text style={styles.qrTitle}>{bus ? `Bus ${bus.code}` : 'Escanear el QR del bus'}</Text>
+          <Text style={styles.qrSub}>
+            {bus ? 'Vinculado · Toca para escanear otro' : 'Opcional · Puedes continuar sin él'}
+          </Text>
         </View>
         <ChevronRight size={18} color={colors.textMuted} />
       </Pressable>
@@ -119,6 +133,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
+  qrLinked: { borderColor: colors.success, backgroundColor: colors.successSoft },
   qrText: { flex: 1, gap: 5 },
   qrTitle: { fontFamily: fonts.semibold, fontSize: fontSize.button, color: colors.text },
   qrSub: { fontFamily: fonts.regular, fontSize: fontSize.small, color: colors.textMuted },

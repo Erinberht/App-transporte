@@ -6,6 +6,9 @@ import { DEFAULT_CLASS_TIME, type ClassTime } from '../lib/classTime';
 import { DEFAULT_WALKING, type WalkingPrefs } from '../planner/recommend';
 import type { Occupancy } from '../types';
 
+/** Bus vinculado al escanear su QR (src/qr). */
+export type LinkedBus = { id: string; code: string; routeId: string };
+
 type TripState = {
   /** Destino elegido en "¿A dónde vas?" (ver src/data/destinations.ts). */
   destinationId: string;
@@ -17,12 +20,15 @@ type TripState = {
   /** Opciones de caminata (como en Moovit): ritmo y límite por tramo. */
   walking: WalkingPrefs;
   occupancy: Occupancy;
+  /** Bus del QR escaneado; solo vale si es de la ruta elegida (ver linkedBusFor). */
+  bus: LinkedBus | null;
   setDestinationId: (id: string) => void;
   setClassTime: (value: ClassTime) => void;
   setOrigin: (value: LatLng | null) => void;
   setRouteId: (id: string) => void;
   setWalking: (value: WalkingPrefs) => void;
   setOccupancy: (value: Occupancy) => void;
+  setBus: (value: LinkedBus | null) => void;
   /** Termina el viaje: borra la ubicación y el estado del recorrido. Conserva destino y hora. */
   reset: () => void;
 };
@@ -38,6 +44,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
   const [routeId, setRouteId] = useState('T2');
   const [walking, setWalking] = useState<WalkingPrefs>(DEFAULT_WALKING);
   const [occupancy, setOccupancy] = useState<Occupancy>('medium');
+  const [bus, setBus] = useState<LinkedBus | null>(null);
 
   const value = useMemo<TripState>(
     () => ({
@@ -47,19 +54,22 @@ export function TripProvider({ children }: { children: ReactNode }) {
       routeId,
       walking,
       occupancy,
+      bus,
       setDestinationId,
       setClassTime,
       setOrigin,
       setRouteId,
       setWalking,
       setOccupancy,
+      setBus,
       reset: () => {
         setOrigin(null);
         setRouteId('T2');
         setOccupancy('medium');
+        setBus(null);
       },
     }),
-    [destinationId, classTime, origin, routeId, walking, occupancy],
+    [destinationId, classTime, origin, routeId, walking, occupancy, bus],
   );
 
   return <TripContext.Provider value={value}>{children}</TripContext.Provider>;
@@ -69,4 +79,9 @@ export function useTrip(): TripState {
   const ctx = useContext(TripContext);
   if (!ctx) throw new Error('useTrip debe usarse dentro de <TripProvider>');
   return ctx;
+}
+
+/** El bus vinculado, solo si es de la ruta que se va a compartir. */
+export function linkedBusFor(bus: LinkedBus | null, routeId: string): LinkedBus | null {
+  return bus && bus.routeId === routeId ? bus : null;
 }

@@ -77,7 +77,7 @@ describe('createShareSession', () => {
     await session.start(OPTIONS);
 
     expect(tracker.requestPermission).toHaveBeenCalled();
-    expect(backend.startTrip).toHaveBeenCalledWith('P3');
+    expect(backend.startTrip).toHaveBeenCalledWith('P3', null);
     expect(tracker.start).toHaveBeenCalledWith('background', 'Ruta P3', expect.any(Function));
     expect(session.getStatus()).toMatchObject({
       state: 'sharing',

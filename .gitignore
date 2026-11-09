@@ -43,3 +43,6 @@ yarn-error.*
 # tests
 coverage/
 .env
+
+# QR de prueba generados (npm run qr:generate)
+/data/qr/

@@ -245,3 +245,33 @@ begin
 end $$;
 
 commit;
+
+-- Busetas desde data/seed/buses.csv (QR: docs/QR_FORMAT.md).
+begin;
+
+insert into public.buses (code, route_id, active) values
+  ('PRUEBA-6M-01', '6M', true),
+  ('PRUEBA-6M-02', '6M', true),
+  ('PRUEBA-AE-01', 'AE', true),
+  ('PRUEBA-AE-02', 'AE', true),
+  ('PRUEBA-D1-01', 'D1', true),
+  ('PRUEBA-D1-02', 'D1', true),
+  ('PRUEBA-M1-01', 'M1', true),
+  ('PRUEBA-M1-02', 'M1', true),
+  ('PRUEBA-P1-01', 'P1', true),
+  ('PRUEBA-P1-02', 'P1', true),
+  ('PRUEBA-P2-01', 'P2', true),
+  ('PRUEBA-P2-02', 'P2', true),
+  ('PRUEBA-P3-01', 'P3', true),
+  ('PRUEBA-P3-02', 'P3', true),
+  ('PRUEBA-RG-01', 'RG', true),
+  ('PRUEBA-RG-02', 'RG', true),
+  ('PRUEBA-S1-01', 'S1', true),
+  ('PRUEBA-S1-02', 'S1', true),
+  ('PRUEBA-T2-01', 'T2', true),
+  ('PRUEBA-T2-02', 'T2', true)
+on conflict (code) do update set route_id = excluded.route_id, active = true;
+
+update public.buses set active = false where code not in ('PRUEBA-6M-01', 'PRUEBA-6M-02', 'PRUEBA-AE-01', 'PRUEBA-AE-02', 'PRUEBA-D1-01', 'PRUEBA-D1-02', 'PRUEBA-M1-01', 'PRUEBA-M1-02', 'PRUEBA-P1-01', 'PRUEBA-P1-02', 'PRUEBA-P2-01', 'PRUEBA-P2-02', 'PRUEBA-P3-01', 'PRUEBA-P3-02', 'PRUEBA-RG-01', 'PRUEBA-RG-02', 'PRUEBA-S1-01', 'PRUEBA-S1-02', 'PRUEBA-T2-01', 'PRUEBA-T2-02');
+
+commit;

@@ -21,7 +21,7 @@ import { getRouteOrDefault } from '../data/repository';
 import { tripOptionFor, useRoutePlan } from '../planner/useRoutePlan';
 import { liveShare, useShareStatus } from '../sharing/liveShare';
 import { shareMessage, type ShareTone } from '../sharing/messages';
-import { useTrip } from '../state/trip';
+import { linkedBusFor, useTrip } from '../state/trip';
 import { colors, fonts, fontSize, lineHeight, radius } from '../theme';
 import type { Occupancy } from '../types';
 
@@ -50,8 +50,9 @@ function useNow(everyMs: number) {
 
 // Paso 4 de 5 · "En viaje"
 export default function InTripScreen() {
-  const { routeId, origin, occupancy, setOccupancy } = useTrip();
+  const { routeId, origin, occupancy, setOccupancy, bus: scannedBus } = useTrip();
   const route = getRouteOrDefault(routeId);
+  const bus = linkedBusFor(scannedBus, route.id);
   const boardStopId = tripOptionFor(useRoutePlan(), route.id)?.boardStop.id;
   const share = useShareStatus();
   const message = shareMessage(share, useNow(5_000));
@@ -61,7 +62,7 @@ export default function InTripScreen() {
     <ScreenLayout
       step={4}
       title="Estás en viaje"
-      subtitle={`Ruta ${route.shortName} · Tu recorrido ayuda a otros viajeros.`}
+      subtitle={`Ruta ${route.shortName}${bus ? ` · Bus ${bus.code}` : ''} · Tu recorrido ayuda a otros viajeros.`}
       ctaLabel={active ? 'Dejar de compartir' : 'Continuar'}
       ctaIcon={active ? Square : ArrowRight}
       onCta={() => {

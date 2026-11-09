@@ -90,3 +90,16 @@ jest.mock('expo-sqlite/kv-store', () => {
   };
   return { __esModule: true, default: storage };
 });
+
+// expo-camera: permiso concedido por defecto; el visor es un View con testID para simular
+// la lectura de un QR llamando a su onBarcodeScanned.
+jest.mock('expo-camera', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  const CameraView = (props) => React.createElement(View, { ...props, testID: 'camera-view' });
+  const useCameraPermissions = jest.fn(() => [
+    { granted: true, status: 'granted', canAskAgain: true, expires: 'never' },
+    jest.fn(),
+  ]);
+  return { CameraView, useCameraPermissions };
+});

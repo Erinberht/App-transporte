@@ -104,10 +104,15 @@ export class TripClosedError extends ApiError {
 }
 
 /**
- * Empieza un viaje compartido anónimo en una ruta y devuelve su id. Si quedó otro viaje
+ * Empieza un viaje compartido anónimo en una ruta (y, si se escaneó su QR, en un bus) y
+ * devuelve su id. Si quedó otro viaje
  * abierto (la app se cerró sin terminarlo), lo cierra antes: solo puede haber uno activo.
  */
-export async function startSharedTrip(client: AppSupabaseClient, routeId: string): Promise<string> {
+export async function startSharedTrip(
+  client: AppSupabaseClient,
+  routeId: string,
+  busId: string | null = null,
+): Promise<string> {
   await ensureAnonymousSession(client);
   await client
     .from('shared_trips')
@@ -115,7 +120,7 @@ export async function startSharedTrip(client: AppSupabaseClient, routeId: string
     .is('ended_at', null);
   const { data, error } = await client
     .from('shared_trips')
-    .insert({ route_id: routeId })
+    .insert({ route_id: routeId, bus_id: busId })
     .select('id')
     .single();
   if (error || !data) throw new ApiError('No se pudo empezar a compartir', error);
@@ -210,4 +215,17 @@ export async function fetchRouteLiveBuses(
       travelers: b.travelers,
       at: new Date(b.position_at),
     }));
+}
+
+export type BusInfo = { id: string; code: string; routeId: string };
+
+/** Busca una buseta activa por su código (el del QR). null si no existe o está inactiva. */
+export async function lookupBus(client: AppSupabaseClient, code: string): Promise<BusInfo | null> {
+  const { data, error } = await client
+    .from('buses')
+    .select('id, code, route_id')
+    .eq('code', code)
+    .maybeSingle();
+  if (error) throw new ApiError('No se pudo validar el bus', error);
+  return data ? { id: data.id, code: data.code, routeId: data.route_id } : null;
 }
