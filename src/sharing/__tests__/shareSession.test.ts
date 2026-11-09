@@ -178,7 +178,12 @@ describe('createShareSession', () => {
 
     expect(tracker.stop).toHaveBeenCalled();
     expect(backend.endTrip).toHaveBeenCalledWith('trip-1', 'user');
-    expect(session.getStatus()).toEqual({ state: 'ended', routeId: 'P3', reason: 'user' });
+    expect(session.getStatus()).toEqual({
+      state: 'ended',
+      routeId: 'P3',
+      reason: 'user',
+      sharedMs: 0,
+    });
   });
 
   it('se detiene solo al detectar que bajó del bus', async () => {
@@ -188,7 +193,12 @@ describe('createShareSession', () => {
     const away = { latitude: 8.7514, longitude: -75.88 };
     for (let t = 0; t <= 120_000; t += 10_000) await gps(t, away, 1);
 
-    expect(session.getStatus()).toEqual({ state: 'ended', routeId: 'P3', reason: 'auto_alighted' });
+    expect(session.getStatus()).toMatchObject({
+      state: 'ended',
+      routeId: 'P3',
+      reason: 'auto_alighted',
+      sharedMs: expect.any(Number),
+    });
     expect(tracker.stop).toHaveBeenCalled();
     expect(backend.endTrip).toHaveBeenCalledWith('trip-1', 'auto_alighted');
     expect(shareMessage(session.getStatus(), 0).title).toBe('Bajaste del bus');

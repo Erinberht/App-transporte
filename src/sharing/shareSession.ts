@@ -73,7 +73,13 @@ export type ShareStatus =
       /** Por qué falló el último envío (se reintenta con la próxima lectura), o null. */
       problem: SendProblem | null;
     }
-  | { state: 'ended'; routeId: string; reason: EndReason }
+  | {
+      state: 'ended';
+      routeId: string;
+      reason: EndReason;
+      /** Cuánto tiempo se compartió (null si se detuvo antes de empezar). */
+      sharedMs: number | null;
+    }
   | { state: 'error'; routeId: string; error: ShareError };
 
 export type StartOptions = {
@@ -261,7 +267,12 @@ export function createShareSession(deps: {
     set(
       opts.error
         ? { state: 'error', routeId: current.routeId, error: opts.error }
-        : { state: 'ended', routeId: current.routeId, reason },
+        : {
+            state: 'ended',
+            routeId: current.routeId,
+            reason,
+            sharedMs: current.state === 'sharing' ? now() - current.startedAt : null,
+          },
     );
     await deps.tracker.stop().catch(() => {});
     if (current.state === 'sharing' && !opts.skipServer) {

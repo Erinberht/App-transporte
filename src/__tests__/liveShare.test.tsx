@@ -4,10 +4,10 @@ import { Stack } from 'expo-router';
 import { renderRouter } from 'expo-router/testing-library';
 
 import * as transit from '../api/transit';
-import ArrivalAlertScreen from '../app/alerta-llegada';
 import BusOnMapScreen from '../app/bus-en-el-mapa';
 import ShareTripScreen from '../app/compartir';
 import InTripScreen from '../app/en-viaje';
+import TripEndScreen from '../app/fin-del-viaje';
 import { liveShare } from '../sharing/liveShare';
 import { TripProvider } from '../state/trip';
 
@@ -35,7 +35,7 @@ const routes = {
   'bus-en-el-mapa': BusOnMapScreen,
   compartir: ShareTripScreen,
   'en-viaje': InTripScreen,
-  'alerta-llegada': ArrivalAlertScreen,
+  'fin-del-viaje': TripEndScreen,
 };
 
 beforeEach(async () => {
@@ -84,7 +84,10 @@ describe('Compartir mi recorrido', () => {
     expect(await screen.findByText(/Último envío hace \d+ s/)).toBeOnTheScreen();
 
     await fireEvent.press(screen.getByText('Dejar de compartir'));
-    expect(screen).toHavePathname('/alerta-llegada');
+    expect(screen).toHavePathname('/fin-del-viaje');
+    expect(
+      screen.getByText(/^Compartiste \d+ min\. Tu ubicación ya no se envía\.$/),
+    ).toBeOnTheScreen();
     expect(remove).toHaveBeenCalled();
     expect(api.endSharedTrip).toHaveBeenCalledWith(expect.anything(), 'trip-1', 'user');
   });

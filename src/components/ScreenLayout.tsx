@@ -3,14 +3,10 @@ import type { ReactNode } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { colors, fonts, fontSize, lineHeight, radius } from '../theme';
+import { colors, fonts, fontSize, lineHeight } from '../theme';
 import { Button } from './Button';
 
-const TOTAL_STEPS = 5;
-
 type Props = {
-  /** Paso del flujo (1 a 5). Sin valor no se muestra el progreso (pantallas previas al flujo). */
-  step?: number;
   title: string;
   subtitle: string;
   children: ReactNode;
@@ -22,32 +18,7 @@ type Props = {
   gap?: number;
 };
 
-function Progress({ step }: { step: number }) {
-  return (
-    <View style={styles.progress} accessibilityLabel={`Paso ${step} de ${TOTAL_STEPS}`}>
-      {Array.from({ length: TOTAL_STEPS }, (_, i) => {
-        const n = i + 1;
-        const active = n === step;
-        return (
-          <View
-            key={n}
-            style={[
-              styles.dot,
-              n <= step ? styles.dotDone : styles.dotTodo,
-              active && styles.dotActive,
-            ]}
-          />
-        );
-      })}
-      <Text style={styles.progressText}>
-        {step} de {TOTAL_STEPS}
-      </Text>
-    </View>
-  );
-}
-
 export function ScreenLayout({
-  step,
   title,
   subtitle,
   children,
@@ -67,7 +38,6 @@ export function ScreenLayout({
             <BusFront size={20} color={colors.primary} />
             <Text style={styles.brandText}>Mi bus</Text>
           </View>
-          {step ? <Progress step={step} /> : null}
         </View>
         <View style={styles.titleBlock}>
           <Text style={styles.title}>{title}</Text>
@@ -102,12 +72,6 @@ const styles = StyleSheet.create({
   topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   brand: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   brandText: { color: colors.primary, fontFamily: fonts.bold, fontSize: fontSize.brand },
-  progress: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  dot: { width: 5, height: 5, borderRadius: radius.pill },
-  dotDone: { backgroundColor: colors.primary },
-  dotTodo: { backgroundColor: colors.border },
-  dotActive: { width: 18 },
-  progressText: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: fontSize.caption },
   titleBlock: { gap: 5 },
   title: { fontFamily: fonts.bold, fontSize: fontSize.title, color: colors.text },
   subtitle: { fontFamily: fonts.regular, fontSize: fontSize.body, color: colors.textMuted },

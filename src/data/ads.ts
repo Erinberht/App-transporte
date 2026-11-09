@@ -2,7 +2,7 @@ import { colors } from '../theme';
 import type { Ad } from '../types';
 
 // Anuncios de MUESTRA con marcas ficticias, solo para mostrar cómo se verían en la app.
-// Ubicaciones sugeridas: franja inferior en "Elegir ruta" y tarjeta en "Alerta de llegada";
+// Ubicaciones sugeridas: franja inferior en "Elegir ruta" y tarjeta en "Esperando tu bus";
 // nunca durante "En viaje" para no distraer.
 export const SAMPLE_ADS: Ad[] = [
   {

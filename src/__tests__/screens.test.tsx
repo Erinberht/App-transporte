@@ -2,11 +2,11 @@ import { fireEvent, screen } from '@testing-library/react-native';
 import { Stack } from 'expo-router';
 import { renderRouter } from 'expo-router/testing-library';
 
-import ArrivalAlertScreen from '../app/alerta-llegada';
 import BusOnMapScreen from '../app/bus-en-el-mapa';
 import ShareTripScreen from '../app/compartir';
 import ChooseRouteScreen from '../app/elegir-ruta';
 import InTripScreen from '../app/en-viaje';
+import TripEndScreen from '../app/fin-del-viaje';
 import WhereToScreen from '../app/index';
 import { liveShare } from '../sharing/liveShare';
 import { TripProvider } from '../state/trip';
@@ -27,7 +27,7 @@ const routes = {
   'bus-en-el-mapa': BusOnMapScreen,
   compartir: ShareTripScreen,
   'en-viaje': InTripScreen,
-  'alerta-llegada': ArrivalAlertScreen,
+  'fin-del-viaje': TripEndScreen,
 };
 
 const open = (initialUrl: string) => renderRouter(routes, { initialUrl });
@@ -45,8 +45,6 @@ describe('Pantallas del flujo', () => {
     expect(screen.getAllByRole('radio')).toHaveLength(1);
     expect(screen.queryByText(/Berástegui/)).not.toBeOnTheScreen();
     expect(screen.getByText('7:00 a. m.')).toBeOnTheScreen();
-    // Antes del flujo de 5 pasos: no muestra progreso.
-    expect(screen.queryByText(/de 5$/)).not.toBeOnTheScreen();
 
     await fireEvent.press(screen.getByText('Buscar rutas'));
     expect(screen).toHavePathname('/elegir-ruta');
@@ -71,10 +69,12 @@ describe('Pantallas del flujo', () => {
     expect(screen).toHavePathname('/bus-en-el-mapa');
   });
 
-  it('2 · Bus en el mapa: muestra la llegada y el aviso de otra ruta', async () => {
+  it('2 · Esperando tu bus: muestra la llegada y el aviso de otra ruta', async () => {
     await open('/bus-en-el-mapa');
 
-    expect(screen.getByText('Tu bus en el mapa')).toBeOnTheScreen();
+    expect(screen.getByText('Esperando tu bus')).toBeOnTheScreen();
+    // La paginación del prototipo ("2 de 5") ya no aparece.
+    expect(screen.queryByText(/de 5$/)).not.toBeOnTheScreen();
     expect(screen.getByText('Llega en 5 min')).toBeOnTheScreen();
     expect(screen.getByText('Rancho Grande: sin reportes')).toBeOnTheScreen();
     expect(screen.getByText('En vivo')).toBeOnTheScreen();
@@ -108,23 +108,23 @@ describe('Pantallas del flujo', () => {
     // Se abrió sin pulsar "Compartir": no hay nada que detener.
     expect(screen.getByText('No estás compartiendo')).toBeOnTheScreen();
     await fireEvent.press(screen.getByText('Continuar'));
-    expect(screen).toHavePathname('/alerta-llegada');
+    expect(screen).toHavePathname('/fin-del-viaje');
   });
 
-  it('5 · Alerta de llegada: muestra el tiempo, el cupo y vuelve al inicio', async () => {
-    await open('/alerta-llegada');
+  it('5 · Fin del viaje: resume, no muestra anuncios y vuelve al inicio', async () => {
+    await open('/fin-del-viaje');
 
-    expect(screen.getByText('Tu bus está cerca')).toBeOnTheScreen();
-    expect(screen.getByText('Tu bus llega en 5 min')).toBeOnTheScreen();
-    expect(screen.getByText('Cupo: medio')).toBeOnTheScreen();
-    expect(screen.getByText('Anuncio')).toBeOnTheScreen();
+    expect(screen.getByText('Viaje terminado')).toBeOnTheScreen();
+    expect(screen.getByText('No compartiste tu ubicación en este viaje.')).toBeOnTheScreen();
+    expect(screen.getByText(/^Llegaste /)).toBeOnTheScreen();
+    expect(screen.queryByText('Anuncio')).not.toBeOnTheScreen();
 
-    await fireEvent.press(screen.getByText('Fin'));
+    await fireEvent.press(screen.getByText('Listo'));
     expect(screen).toHavePathname('/');
   });
 
-  it('5 · "Buscar otra ruta" vuelve a la lista de rutas', async () => {
-    await open('/alerta-llegada');
+  it('2 · "Buscar otra ruta" (mientras esperas) vuelve a la lista de rutas', async () => {
+    await open('/bus-en-el-mapa');
 
     await fireEvent.press(screen.getByText('Buscar otra ruta'));
     expect(screen).toHavePathname('/elegir-ruta');
@@ -146,7 +146,9 @@ describe('Pantallas del flujo', () => {
     expect(await screen.findByText('No se está compartiendo')).toBeOnTheScreen();
     await fireEvent.press(screen.getByText('Continuar'));
 
-    expect(screen.getByText('Cupo: vacío')).toBeOnTheScreen();
-    expect(screen.getByText('Alerta de llegada · P1')).toBeOnTheScreen();
+    expect(screen).toHavePathname('/fin-del-viaje');
+    expect(screen.getByText(/Ruta P1 · terminaste a las/)).toBeOnTheScreen();
+    await fireEvent.press(screen.getByText('Listo'));
+    expect(screen).toHavePathname('/');
   });
 });
