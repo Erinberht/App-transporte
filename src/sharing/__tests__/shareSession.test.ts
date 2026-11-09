@@ -126,12 +126,49 @@ describe('createShareSession', () => {
     const { session, backend, gps } = setup();
     await session.start(OPTIONS);
     backend.sendPosition.mockRejectedValueOnce(new Error('Network request failed'));
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
     await gps(0, onRoute(0));
-    expect(session.getStatus()).toMatchObject({ state: 'sharing', sendFailing: true });
+    expect(warn).toHaveBeenCalled(); // queda en el registro del teléfono
+    warn.mockRestore();
+    expect(session.getStatus()).toMatchObject({ state: 'sharing', problem: 'no_signal' });
     expect(shareMessage(session.getStatus(), T0).title).toBe('Sin señal');
 
     await gps(1_000, onRoute(10)); // tras un fallo se reintenta sin esperar
-    expect(session.getStatus()).toMatchObject({ sendFailing: false, lastSentAt: T0 + 1_000 });
+    expect(session.getStatus()).toMatchObject({ problem: null, lastSentAt: T0 + 1_000 });
+  });
+
+  it('fuera de Montería no envía, lo explica y sigue apenas entra a la ciudad', async () => {
+    const { session, backend, gps } = setup();
+    await session.start(OPTIONS);
+    const cartagena = { latitude: 10.39, longitude: -75.48 };
+
+    await gps(0, cartagena);
+    expect(backend.sendPosition).not.toHaveBeenCalled();
+    expect(session.getStatus()).toMatchObject({ state: 'sharing', problem: 'outside_area' });
+    expect(shareMessage(session.getStatus(), T0).title).toBe('Estás fuera de Montería');
+
+    await gps(10_000, onRoute(0));
+    expect(backend.sendPosition).toHaveBeenCalledTimes(1);
+    expect(session.getStatus()).toMatchObject({ problem: null });
+  });
+
+  it.each([
+    ['clock', 'clock', 'La hora del teléfono no está bien'],
+    ['too_frequent', 'rejected', 'El servidor no aceptó tu ubicación'],
+  ] as const)('rechazo del servidor (%s) se explica como %s', async (reason, problem, title) => {
+    const { session, backend, gps } = setup();
+    await session.start(OPTIONS);
+    const rejected = Object.assign(new Error('rechazada'), {
+      name: 'PositionRejectedError',
+      reason,
+    });
+    backend.sendPosition.mockRejectedValueOnce(rejected);
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    await gps(0, onRoute(0));
+    warn.mockRestore();
+
+    expect(session.getStatus()).toMatchObject({ problem });
+    expect(shareMessage(session.getStatus(), T0).title).toBe(title);
   });
 
   it('"Dejar de compartir" apaga el GPS y cierra el viaje en el servidor', async () => {
@@ -162,7 +199,9 @@ describe('createShareSession', () => {
     await session.start(OPTIONS);
     const closed = Object.assign(new Error('cerrado'), { name: 'TripClosedError' });
     backend.sendPosition.mockRejectedValueOnce(closed);
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
     await gps(0, onRoute(0));
+    warn.mockRestore();
     await Promise.resolve();
 
     expect(session.getStatus()).toMatchObject({ state: 'ended', reason: 'timeout' });
@@ -249,7 +288,7 @@ describe('shareMessage', () => {
       mode: 'background',
       startedAt: 0,
       lastSentAt: 1_000,
-      sendFailing: false,
+      problem: null,
     } as const;
     expect(shareMessage(status, 9_000).body).toBe('Último envío hace 8 s.');
     expect(shareMessage(status, 181_000).body).toBe('Último envío hace 3 min.');

@@ -26,12 +26,31 @@ export function shareMessage(status: ShareStatus, now: number): ShareMessage {
     case 'sharing': {
       const keepOpen =
         status.mode === 'foreground' ? ' Mantén la app abierta para seguir compartiendo.' : '';
-      if (status.sendFailing) {
-        return {
-          tone: 'warning',
-          title: 'Sin señal',
-          body: `Reintentamos con tu próxima ubicación.${keepOpen}`,
-        };
+      switch (status.problem) {
+        case 'outside_area':
+          return {
+            tone: 'warning',
+            title: 'Estás fuera de Montería',
+            body: `Solo se comparte dentro de la ciudad. Cuando entres a Montería se envía solo.${keepOpen}`,
+          };
+        case 'clock':
+          return {
+            tone: 'warning',
+            title: 'La hora del teléfono no está bien',
+            body: 'Activa la fecha y hora automáticas en los ajustes del teléfono.',
+          };
+        case 'rejected':
+          return {
+            tone: 'warning',
+            title: 'El servidor no aceptó tu ubicación',
+            body: `Reintentamos con tu próxima ubicación.${keepOpen}`,
+          };
+        case 'no_signal':
+          return {
+            tone: 'warning',
+            title: 'Sin señal',
+            body: `Reintentamos con tu próxima ubicación.${keepOpen}`,
+          };
       }
       return {
         tone: 'success',

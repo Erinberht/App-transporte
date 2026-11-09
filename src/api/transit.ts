@@ -92,6 +92,8 @@ export type TripEndReason = Database['public']['Enums']['trip_end_reason'];
 
 /** Código de Postgres cuando el viaje no existe, no es tuyo o ya terminó (ver la migración). */
 const TRIP_CLOSED = '42501';
+/** Código de Postgres cuando la posición no pasa un límite (Montería, hora, frecuencia). */
+const CHECK_VIOLATION = '23514';
 
 /** El servidor ya cerró el viaje (por ejemplo, por 10 minutos sin posiciones). */
 export class TripClosedError extends ApiError {
@@ -142,7 +144,28 @@ export type TripPosition = {
   accuracyM: number | null;
 };
 
-/** Envía una posición del viaje. Lanza TripClosedError si el servidor ya lo cerró. */
+/** El servidor rechazó la posición (código 23514 de los límites de la migración). */
+export class PositionRejectedError extends ApiError {
+  constructor(
+    readonly reason: 'outside_area' | 'clock' | 'too_frequent' | 'other',
+    cause?: unknown,
+  ) {
+    super('El servidor rechazó la posición', cause);
+    this.name = 'PositionRejectedError';
+  }
+}
+
+function rejectionReason(message: string): PositionRejectedError['reason'] {
+  if (/in_monteria|location_check/i.test(message)) return 'outside_area';
+  if (/recorded_at/i.test(message)) return 'clock';
+  if (/demasiadas posiciones/i.test(message)) return 'too_frequent';
+  return 'other';
+}
+
+/**
+ * Envía una posición del viaje. Lanza TripClosedError si el servidor ya lo cerró y
+ * PositionRejectedError si no la acepta (fuera de Montería, hora desfasada...).
+ */
 export async function sendTripPosition(
   client: AppSupabaseClient,
   tripId: string,
@@ -158,6 +181,9 @@ export async function sendTripPosition(
   });
   if (!error) return;
   if (error.code === TRIP_CLOSED) throw new TripClosedError(error);
+  if (error.code === CHECK_VIOLATION) {
+    throw new PositionRejectedError(rejectionReason(error.message ?? ''), error);
+  }
   throw new ApiError('No se pudo enviar la posición', error);
 }
 
