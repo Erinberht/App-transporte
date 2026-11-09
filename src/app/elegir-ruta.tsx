@@ -27,7 +27,7 @@ const STATUS_COLORS: Record<ArrivalStatus, { fg: string; bg: string }> = {
   late: { fg: colors.danger, bg: colors.dangerSoft },
 };
 
-// Paso 1 de 5 · "Elegir ruta"
+// "Elegir ruta"
 export default function ChooseRouteScreen() {
   const { routeId, origin, setRouteId } = useTrip();
   const plan = useRoutePlan();
@@ -46,7 +46,6 @@ export default function ChooseRouteScreen() {
 
   return (
     <ScreenLayout
-      step={1}
       title="Elige tu ruta"
       subtitle="Encuentra tu bus y viaja con más certeza."
       footerNote="Selecciona una ruta para ver su recorrido."

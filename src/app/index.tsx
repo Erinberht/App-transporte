@@ -11,7 +11,7 @@ import { useUserLocation } from '../location/useUserLocation';
 import { useTrip } from '../state/trip';
 import { colors, fonts, fontSize, radius } from '../theme';
 
-// Pantalla inicial · "¿A dónde vas?" (antes del flujo de 5 pasos).
+// Pantalla inicial · "¿A dónde vas?".
 export default function WhereToScreen() {
   const { destinationId, setDestinationId, classTime, setClassTime, setOrigin } = useTrip();
   const location = useUserLocation();

@@ -2,26 +2,23 @@
 
 App móvil para que los estudiantes de la Universidad de Córdoba (Montería) encuentren la mejor ruta de buseta para llegar a tiempo a clase, vean a qué hora llega su bus y ayuden a otros compartiendo su recorrido y el cupo del bus. Más adelante se abrirá a otros destinos de la ciudad y a más personas.
 
-Este repositorio es la **base inicial**: el flujo de 5 pantallas del prototipo de Figma ya funciona con datos de muestra. Todo lo demás (GPS real, backend, predicción, anuncios reales) se construye por etapas con los prompts de [`PROMPTS.md`](./PROMPTS.md).
+El flujo parte del prototipo de Figma, reordenado para que tenga sentido en un viaje real. Se construye por etapas con los prompts de [`PROMPTS.md`](./PROMPTS.md).
 
-## Qué incluye hoy
+## Flujo
 
-| Paso | Pantalla (Figma)                                   | Ruta Expo Router             |
-| ---- | -------------------------------------------------- | ---------------------------- |
-| —    | ¿A dónde vas? (ubicación, destino, hora de clase)  | `src/app/index.tsx`          |
-| 1    | Elegir ruta                                        | `src/app/elegir-ruta.tsx`    |
-| 2    | Bus en el mapa                                     | `src/app/bus-en-el-mapa.tsx` |
-| 3    | Compartir recorrido (QR opcional)                  | `src/app/compartir.tsx`      |
-| 4    | En viaje + reporte de cupo (lleno / medio / vacío) | `src/app/en-viaje.tsx`       |
-| 5    | Alerta de llegada                                  | `src/app/alerta-llegada.tsx` |
+| Pantalla                                                               | Ruta Expo Router             |
+| ---------------------------------------------------------------------- | ---------------------------- |
+| ¿A dónde vas? (ubicación, destino, hora de clase)                      | `src/app/index.tsx`          |
+| Elegir ruta (ordenadas por margen para llegar a clase)                 | `src/app/elegir-ruta.tsx`    |
+| Esperando tu bus (cuándo pasa, si llegas a tiempo, "Buscar otra ruta") | `src/app/bus-en-el-mapa.tsx` |
+| ¿Subiste? · Compartir tu recorrido                                     | `src/app/compartir.tsx`      |
+| Escanear el QR del bus (opcional, desde Compartir)                     | `src/app/escanear-qr.tsx`    |
+| En viaje + reporte de cupo                                             | `src/app/en-viaje.tsx`       |
+| Fin del viaje (resumen, sin anuncios)                                  | `src/app/fin-del-viaje.tsx`  |
 
-- Pantalla inicial "¿A dónde vas?": pide permiso de ubicación con `expo-location` (solo en primer plano, después de explicar para qué se usa; se puede continuar sin ella), destino y hora de entrada a clase. Por ahora el único destino es la Universidad de Córdoba, sede Montería (campus principal). Los destinos viven en un solo lugar, `src/data/destinations.ts`: para agregar otros basta con añadirlos ahí.
-- Anuncios de muestra con marcas ficticias en `src/data/ads.ts`, mostrados con `AdBanner` (franja en el paso 1, tarjeta en el paso 5).
-- Mapa real de Montería con `react-native-maps` (`RouteMap.native.tsx`: Apple Maps en iOS, Google Maps en Android) con la ruta punteada, la parada del usuario y el bus. El recorrido y las coordenadas son de muestra (`src/data/geo.ts`).
-- Sin conexión, y en web, se muestra el mapa ilustrativo del Figma (`StaticRouteMap`) con el aviso "Sin conexión".
-- Para builds de Android hace falta una clave de Google Maps: copia `.env.example` a `.env.local` y completa `GOOGLE_MAPS_ANDROID_API_KEY` (la lee `app.config.js`). Expo Go no la necesita.
-- Estado del viaje en memoria (`src/state/trip.tsx`); rutas y ETA son datos fijos (`src/data/routes.ts`).
-- Los botones "Escanear el QR" y "Compartir" aún no piden permisos ni envían nada: hay comentarios `TODO` en esos puntos.
+La pantalla "Alerta de llegada" del prototipo se unió a "Esperando tu bus" (servía para decidir si esperar o buscar otra ruta, antes de subir), y se quitó la paginación "N de 5", que solo era una guía del prototipo.
+
+Detalles de cada parte: `docs/RECOMENDACION.md`, `docs/COMPARTIR.md`, `docs/QR_FORMAT.md`, `docs/BACKEND.md`, `docs/DATA_MODEL.md`. El contexto para trabajar en el proyecto está en `CLAUDE.md`.
 
 ## Cómo correrlo
 

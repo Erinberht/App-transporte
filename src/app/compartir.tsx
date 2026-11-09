@@ -10,7 +10,7 @@ import { liveShare } from '../sharing/liveShare';
 import { linkedBusFor, useTrip } from '../state/trip';
 import { colors, fonts, fontSize, lineHeight, radius } from '../theme';
 
-// Paso 3 de 5 · "Compartir recorrido"
+// "Compartir recorrido"
 export default function ShareTripScreen() {
   const { routeId, origin, bus: scannedBus } = useTrip();
   const route = getRouteOrDefault(routeId);
@@ -20,7 +20,6 @@ export default function ShareTripScreen() {
 
   return (
     <ScreenLayout
-      step={3}
       title={`¿Subiste al bus ${route.shortName}?`}
       subtitle="Ayuda a quienes también esperan esta ruta."
       footerNote="Comparte tu recorrido, no tu identidad."

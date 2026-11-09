@@ -10,7 +10,6 @@ import {
   UsersRound,
   type LucideIcon,
 } from 'lucide-react-native';
-import { useEffect, useState } from 'react';
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { LiveBadge } from '../components/LiveBadge';
@@ -18,6 +17,7 @@ import { RouteMap } from '../components/RouteMap';
 import { ScreenLayout } from '../components/ScreenLayout';
 import { OCCUPANCY_LABEL } from '../data/live';
 import { getRouteOrDefault } from '../data/repository';
+import { useNow } from '../lib/useNow';
 import { tripOptionFor, useRoutePlan } from '../planner/useRoutePlan';
 import { liveShare, useShareStatus } from '../sharing/liveShare';
 import { shareMessage, type ShareTone } from '../sharing/messages';
@@ -38,17 +38,7 @@ const TONES: Record<ShareTone, string> = {
   muted: colors.textMuted,
 };
 
-/** Hora actual que se actualiza cada `everyMs` (para "Último envío hace 8 s"). */
-function useNow(everyMs: number) {
-  const [now, setNow] = useState(Date.now);
-  useEffect(() => {
-    const timer = setInterval(() => setNow(Date.now()), everyMs);
-    return () => clearInterval(timer);
-  }, [everyMs]);
-  return now;
-}
-
-// Paso 4 de 5 · "En viaje"
+// "En viaje"
 export default function InTripScreen() {
   const { routeId, origin, occupancy, setOccupancy, bus: scannedBus } = useTrip();
   const route = getRouteOrDefault(routeId);
@@ -60,14 +50,13 @@ export default function InTripScreen() {
 
   return (
     <ScreenLayout
-      step={4}
       title="Estás en viaje"
       subtitle={`Ruta ${route.shortName}${bus ? ` · Bus ${bus.code}` : ''} · Tu recorrido ayuda a otros viajeros.`}
       ctaLabel={active ? 'Dejar de compartir' : 'Continuar'}
       ctaIcon={active ? Square : ArrowRight}
       onCta={() => {
         if (active) liveShare.stop();
-        router.push('/alerta-llegada');
+        router.push('/fin-del-viaje');
       }}
     >
       <View style={styles.live}>

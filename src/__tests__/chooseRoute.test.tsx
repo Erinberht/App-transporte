@@ -4,6 +4,7 @@ import { renderRouter } from 'expo-router/testing-library';
 
 import BusOnMapScreen from '../app/bus-en-el-mapa';
 import ChooseRouteScreen from '../app/elegir-ruta';
+import { classArrivalText } from '../app/fin-del-viaje';
 import WhereToScreen from '../app/index';
 import { TripProvider } from '../state/trip';
 
@@ -75,5 +76,40 @@ describe('Elegir ruta con recomendación', () => {
 
     expect(screen.getAllByRole('radio')[9].props.accessibilityState).toEqual({ selected: true });
     expect(screen.getAllByRole('radio')[0].props.accessibilityState).toEqual({ selected: false });
+  });
+
+  it('al esperar el bus muestra cuándo pasa y si así llegas a tiempo', async () => {
+    await openWithLocation();
+    await fireEvent.press(screen.getByText('Ver mi bus'));
+
+    expect(screen).toHavePathname('/bus-en-el-mapa');
+    expect(screen.getByText('Esperando tu bus')).toBeOnTheScreen();
+    expect(screen.getByText(/^Ruta .+ · Súbete en .+\.$/)).toBeOnTheScreen();
+    expect(screen.getByText(/^Pasa a las \d+:\d\d [ap]\. m\. · llegas /)).toBeOnTheScreen();
+    expect(screen.getByText(LABEL)).toBeOnTheScreen();
+    expect(screen.getByText(/^(Llega en \d+ min|Está llegando)$/)).toBeOnTheScreen();
+  });
+
+  it('si con la ruta elegida llegas tarde, lo avisa al esperar', async () => {
+    await openWithLocation();
+    // La última de la lista es la que llega más tarde (AE con los datos de prueba).
+    await fireEvent.press(screen.getAllByRole('radio')[9]);
+    await fireEvent.press(screen.getByText('Ver mi bus'));
+
+    const late = screen.queryByText(/Con este bus llegas tarde a tu clase de las 7:00 a\. m\./);
+    expect(screen.getByText(LABEL)).toHaveTextContent(/^Llegas tarde/);
+    expect(late).toBeOnTheScreen();
+  });
+});
+
+describe('classArrivalText', () => {
+  const clase = new Date(2026, 10, 9, 7, 0);
+  it.each([
+    [new Date(2026, 10, 9, 6, 52), 'Llegaste 8 min antes de tu clase de las 7:00 a. m.'],
+    [new Date(2026, 10, 9, 7, 0), 'Llegaste justo a tiempo a tu clase de las 7:00 a. m.'],
+    [new Date(2026, 10, 9, 7, 5), 'Llegaste 5 min tarde a tu clase de las 7:00 a. m.'],
+    [new Date(2026, 10, 9, 13, 30), 'Llegaste a las 1:30 p. m.'],
+  ])('%s', (llegada, texto) => {
+    expect(classArrivalText(llegada, clase)).toBe(texto);
   });
 });

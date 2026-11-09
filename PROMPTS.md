@@ -73,7 +73,7 @@ Implementa "Escanear el QR del bus" con expo-camera. El QR identifica la buseta 
 **3.3 Cupo del bus**
 
 ```
-Conecta los botones Lleno / Medio / Vacío de "En viaje" al backend. Agrega los reportes de varios viajeros con una regla simple (la mayoría reciente, expiran a los 10 minutos) y muestra en "Alerta de llegada" y en "Elegir ruta" el cupo con la hora del último reporte. Evita que un solo usuario sature con reportes (límite por viaje).
+Conecta los botones Lleno / Medio / Vacío de "En viaje" al backend. Agrega los reportes de varios viajeros con una regla simple (la mayoría reciente, expiran a los 10 minutos) y muestra en "Esperando tu bus" y en "Elegir ruta" el cupo con la hora del último reporte. Evita que un solo usuario sature con reportes (límite por viaje).
 ```
 
 **3.4 Retrasos, tráfico y alternativas**
@@ -143,7 +143,7 @@ Prepara un piloto con estudiantes de Unicórdoba: configuración de EAS Build (A
 **7.1 Espacios publicitarios**
 
 ```
-Convierte los anuncios de muestra de src/data/ads.ts en un sistema de anuncios: contrato de datos (anunciante, creatividad, vigencia, ubicación, segmentación), componente AdBanner con etiqueta "Anuncio" siempre visible, y reglas de colocación: franja en "Elegir ruta", tarjeta en "Alerta de llegada", nunca en "En viaje". Prioriza negocios cercanos a la universidad y a las paradas. Frecuencia máxima configurable.
+Convierte los anuncios de muestra de src/data/ads.ts en un sistema de anuncios: contrato de datos (anunciante, creatividad, vigencia, ubicación, segmentación), componente AdBanner con etiqueta "Anuncio" siempre visible, y reglas de colocación: franja en "Elegir ruta", tarjeta en "Esperando tu bus", nunca en "En viaje" ni en "Fin del viaje". Prioriza negocios cercanos a la universidad y a las paradas. Frecuencia máxima configurable.
 ```
 
 **7.2 Monetización**
