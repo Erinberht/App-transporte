@@ -11,8 +11,8 @@ App para estudiantes de la Universidad de Córdoba (Montería, Colombia) que ayu
 - Compartir ubicación en vivo al subir (opcional: escanear QR del bus) y reportar cupo (lleno/medio/vacío).
 - Rutas sugeridas según el perfil (lugares frecuentes, horario de clases).
 - Modelo predictivo de tiempos con datos compartidos voluntariamente (festivos, horas pico, desvíos).
-- Alcance actual: SOLO la sede Montería de la Universidad de Córdoba como destino. No agregar otras sedes (Berástegui, etc.) ni otros destinos por ahora.
-- Más adelante: otros destinos de la ciudad, más usuarios y anuncios.
+- Alcance actual: la sede Montería de la Universidad de Córdoba es el destino principal. No agregar otras sedes (Berástegui, etc.). Desde la etapa 4.1 el usuario puede guardar sus propios lugares frecuentes (casa, trabajo...) como destinos; el motor solo sugiere las rutas cargadas y debe decir cuándo ninguna sirve.
+- Más adelante: más usuarios y anuncios.
 
 ## Reglas
 
@@ -25,7 +25,7 @@ App para estudiantes de la Universidad de Córdoba (Montería, Colombia) que ayu
 
 ## Estado actual
 
-Flujo: "¿A dónde vas?" (`index.tsx`) → Elegir ruta → Esperando tu bus (`bus-en-el-mapa.tsx`, con "Buscar otra ruta"; absorbió la "Alerta de llegada" del prototipo) → Compartir (QR opcional en `escanear-qr.tsx`) → En viaje → Fin del viaje (`fin-del-viaje.tsx`, sin anuncios). Sin paginación "N de 5" (era solo guía del prototipo). La ubicación del usuario (`src/location/useUserLocation.ts`, solo primer plano) se guarda en memoria como origen del viaje y no se envía a ningún lado. Destinos en `src/data/destinations.ts` (hoy solo Unicórdoba sede Montería; no agregar otras sedes hasta que se pida). Mapa real con `react-native-maps` que dibuja el recorrido de la ruta elegida; el mapa ilustrativo (`StaticRouteMap`) queda como respaldo sin conexión y en web.
+Flujo: "¿A dónde vas?" (`index.tsx`) → Elegir ruta → Esperando tu bus (`bus-en-el-mapa.tsx`, con "Buscar otra ruta"; absorbió la "Alerta de llegada" del prototipo) → Compartir (QR opcional en `escanear-qr.tsx`) → En viaje → Fin del viaje (`fin-del-viaje.tsx`, sin anuncios). Sin paginación "N de 5" (era solo guía del prototipo). La ubicación del usuario (`src/location/useUserLocation.ts`, solo primer plano) se guarda en memoria como origen del viaje y no se envía a ningún lado. Destinos en `src/data/destinations.ts` (hoy solo Unicórdoba sede Montería; los lugares del usuario llegan con el perfil, etapa 4.1). Mapa real con `react-native-maps` que dibuja el recorrido de la ruta elegida; el mapa ilustrativo (`StaticRouteMap`) queda como respaldo sin conexión y en web.
 
 Build de Android con EAS (`eas.json`: perfiles `preview` = APK interno y `production` = AAB). Paquete `com.erinberht.mibus`. La clave `GOOGLE_MAPS_ANDROID_API_KEY` va en `.env.local` (local, ignorado por git) y como variable de entorno de EAS (`sensitive`, entornos preview y production) para los builds en la nube. R8 desactivado en Android (`expo-build-properties`) porque rompía WorkManager al arrancar.
 

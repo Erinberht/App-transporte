@@ -76,10 +76,10 @@ Implementa "Escanear el QR del bus" con expo-camera. El QR identifica la buseta 
 Conecta los botones Lleno / Medio / Vacío de "En viaje" al backend. Agrega los reportes de varios viajeros con una regla simple (la mayoría reciente, expiran a los 10 minutos) y muestra en "Esperando tu bus" y en "Elegir ruta" el cupo con la hora del último reporte. Evita que un solo usuario sature con reportes (límite por viaje).
 ```
 
-**3.4 Retrasos, tráfico y alternativas**
+**3.4 Retrasos, tráfico, busetas varadas y alternativas**
 
 ```
-Detecta retrasos comparando la posición real de la buseta con el horario esperado. Cuando una ruta tenga retraso grande, desvío o falla de una buseta, muestra un aviso en la pantalla "Bus en el mapa" (como el de "Rancho Grande: sin reportes") y sugiere automáticamente la mejor alternativa con su hora de llegada. Añade el botón "Buscar otra ruta" funcional que recalcula con el motor de recomendación.
+Detecta retrasos comparando la posición real de la buseta con el horario esperado. Agrega reportes de incidentes de los viajeros desde "En viaje": "Se varó", "Cambió de ruta o se desvió" y "Va muy retrasada". Solo puede reportar quien está compartiendo un viaje en esa ruta (va en el bus); límite por viaje, expiran a los 30 minutos y se muestran con su número de reportes ("1 viajero reporta…" o "3 viajeros reportan…"). Si el bus lleva varios minutos sin moverse fuera de una parada, pregunta al viajero "¿Se varó el bus?". A quienes esperan esa ruta en una parada más adelante, muestra el aviso en "Esperando tu bus" (como "Rancho Grande: sin reportes") con la mejor alternativa y su hora de llegada, y deja la base para notificarlos en la etapa 4.2. El botón "Buscar otra ruta" recalcula con el motor de recomendación.
 ```
 
 ---
@@ -89,13 +89,13 @@ Detecta retrasos comparando la posición real de la buseta con el horario espera
 **4.1 Perfil del estudiante**
 
 ```
-Crea el perfil: lugares frecuentes (casa, universidad, trabajo) y horario de clases por día. Pantalla para editarlo, guardado local y sincronizado cuando haya cuenta. El perfil es opcional y se puede borrar completo desde la app.
+Crea el perfil: horario de clases por día (editable en cualquier momento) y lugares frecuentes que el usuario guarda, como casa o trabajo, además de la universidad. Estos lugares abren otros destinos además de Unicórdoba: el motor de recomendación sirve para cualquier destino, pero solo puede sugerir las rutas cargadas, así que debe avisar cuando ninguna ruta sirve para ese lugar. "¿A dónde vas?" propone el destino y la hora de la próxima clase del día. Pantalla para editar el perfil, guardado local y sincronizado cuando haya cuenta. El perfil es opcional y se puede borrar completo desde la app.
 ```
 
 **4.2 Rutas basadas en el perfil + notificaciones**
 
 ```
-Con el perfil, sugiere cada mañana la ruta y la hora de salida recomendadas para llegar a la primera clase. Implementa notificaciones push con expo-notifications: aviso de salida ("Sal en 10 min para llegar a tu clase de las 7"), alerta de llegada del bus y aviso de retraso en tu ruta habitual. El usuario puede activar o desactivar cada tipo.
+Con el perfil, sugiere cada mañana la ruta y la hora de salida recomendadas para llegar a la primera clase. Implementa notificaciones push con expo-notifications: aviso de salida ("Sal en 10 min para llegar a tu clase de las 7"), alerta de llegada del bus y avisos de retraso o de buseta varada (reportes de la etapa 3.4) en las rutas que el usuario frecuenta, con la alternativa sugerida. El usuario puede activar o desactivar cada tipo.
 ```
 
 ---
