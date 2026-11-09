@@ -77,7 +77,7 @@ export default function InTripScreen() {
               {message.body}
             </Text>
           </View>
-          {share.state === 'sharing' && !share.sendFailing ? <LiveBadge /> : null}
+          {share.state === 'sharing' && !share.problem ? <LiveBadge /> : null}
         </View>
         {message.action ? (
           <Pressable

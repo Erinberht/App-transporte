@@ -31,6 +31,19 @@ Código: `src/sharing/`. Servidor: `supabase/migrations/20261108230000_buses_en_
 - **Notificación de Android:** expo-location no permite agregarle botones. Tocarla abre la app, y desde ahí se deja de compartir.
 - **Si se cierra la app:** el servicio se detiene con ella (`killServiceOnDestroy`) y el servidor cierra el viaje a los 10 minutos.
 
+## Cuando no llega la posición
+
+"En viaje" dice el motivo. El código queda en el registro del teléfono (`adb logcat`, línea `[compartir] envío fallido`):
+
+| Mensaje                            | Causa                                                                                |
+| ---------------------------------- | ------------------------------------------------------------------------------------ |
+| Estás fuera de Montería            | El servidor solo acepta posiciones dentro de la ciudad; la app ni intenta enviarlas. |
+| La hora del teléfono no está bien  | `recorded_at` desfasado más de 10 minutos.                                           |
+| El servidor no aceptó tu ubicación | Otro límite del servidor (por ejemplo, más de una posición cada 3 s).                |
+| Sin señal                          | Sin internet o el servidor no respondió.                                             |
+
+En todos los casos se reintenta con la siguiente lectura del GPS.
+
 ## Cuándo se detiene solo
 
 Las reglas están en `alighting.ts`:

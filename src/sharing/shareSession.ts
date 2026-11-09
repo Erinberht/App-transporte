@@ -5,6 +5,7 @@
 // Sin persistencia a propósito: si el sistema cierra la app, el servicio de ubicación muere con
 // ella y el servidor cierra el viaje a los 10 minutos sin posiciones (close_stale_trips).
 import { distanceMeters, type LatLng } from '../data/geo';
+import { isInMonteria } from '../data/validate';
 import {
   detectTripEnd,
   MAX_ACCURACY_METERS,
@@ -30,9 +31,23 @@ export interface LocationTracker {
 export interface ShareBackend {
   startTrip(routeId: string): Promise<string>;
   endTrip(tripId: string, reason: EndReason): Promise<void>;
-  /** Debe lanzar un error con name 'TripClosedError' si el servidor ya cerró el viaje. */
+  /**
+   * Debe lanzar un error con name 'TripClosedError' si el servidor ya cerró el viaje, o con
+   * name 'PositionRejectedError' y `reason` si rechazó la posición (ver SendProblem).
+   */
   sendPosition(tripId: string, sample: LocationSample): Promise<void>;
 }
+
+/** Por qué no está llegando la posición al servidor. */
+export type SendProblem =
+  /** Sin internet o el servidor no respondió. */
+  | 'no_signal'
+  /** La posición está fuera de Montería: el servidor no la acepta (ni se intenta enviar). */
+  | 'outside_area'
+  /** La hora del teléfono está desfasada: la posición parece vieja o del futuro. */
+  | 'clock'
+  /** El servidor la rechazó por otro motivo. */
+  | 'rejected';
 
 export type ShareError =
   /** La app no tiene backend configurado. */
@@ -55,8 +70,8 @@ export type ShareStatus =
       startedAt: number;
       /** Hora del último envío que llegó al servidor. */
       lastSentAt: number | null;
-      /** El último envío falló (sin señal): se reintenta con la próxima lectura. */
-      sendFailing: boolean;
+      /** Por qué falló el último envío (se reintenta con la próxima lectura), o null. */
+      problem: SendProblem | null;
     }
   | { state: 'ended'; routeId: string; reason: EndReason }
   | { state: 'error'; routeId: string; error: ShareError };
@@ -148,7 +163,7 @@ export function createShareSession(deps: {
       mode,
       startedAt,
       lastSentAt: null,
-      sendFailing: false,
+      problem: null,
     });
     try {
       await deps.tracker.start(mode, options.label, handleSamples);
@@ -176,13 +191,19 @@ export function createShareSession(deps: {
     const latest = samples
       .filter((s) => s.accuracy === null || s.accuracy <= MAX_ACCURACY_METERS)
       .sort((a, b) => b.timestamp - a.timestamp)[0];
-    if (latest && shouldSend(latest, t)) send(latest);
+    if (!latest) return;
+    if (!isInMonteria(latest.coordinate)) {
+      // El servidor la rechazaría: ni se intenta. Al entrar a Montería se envía sola.
+      if (status.problem !== 'outside_area') set({ ...status, problem: 'outside_area' });
+      return;
+    }
+    if (shouldSend(latest, t)) send(latest);
   }
 
   function shouldSend(sample: LocationSample, t: number) {
     if (sending) return false;
     if (status.state !== 'sharing') return false;
-    if (!lastSent || status.lastSentAt === null) return true;
+    if (!lastSent || status.lastSentAt === null || status.problem) return true;
     const elapsed = t - status.lastSentAt;
     if (elapsed < MIN_SEND_INTERVAL_MS) return false;
     return (
@@ -201,15 +222,25 @@ export function createShareSession(deps: {
       await backend.sendPosition(tripId, sample);
       if (gen !== generation || status.state !== 'sharing') return;
       lastSent = sample;
-      set({ ...status, lastSentAt: now(), sendFailing: false });
+      set({ ...status, lastSentAt: now(), problem: null });
     } catch (e) {
       if (gen !== generation || status.state !== 'sharing') return;
-      if (e instanceof Error && e.name === 'TripClosedError') {
+      const name = e instanceof Error ? e.name : '';
+      // Queda en el registro del teléfono (adb logcat) para poder diagnosticar.
+      console.warn('[compartir] envío fallido:', name, (e as { reason?: string })?.reason ?? '');
+      if (name === 'TripClosedError') {
         // El servidor lo cerró (10 min sin posiciones): solo falta apagar el GPS.
         await finish('timeout', { skipServer: true });
-      } else if (!status.sendFailing) {
-        set({ ...status, sendFailing: true });
+        return;
       }
+      const reason = (e as { reason?: string }).reason;
+      const problem: SendProblem =
+        name !== 'PositionRejectedError'
+          ? 'no_signal'
+          : reason === 'outside_area' || reason === 'clock'
+            ? reason
+            : 'rejected';
+      if (status.problem !== problem) set({ ...status, problem });
     } finally {
       sending = false;
     }

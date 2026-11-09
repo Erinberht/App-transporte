@@ -15,6 +15,7 @@ import {
   fetchRouteLiveBuses,
   fetchRouteLiveStatus,
   fetchTransitDataset,
+  PositionRejectedError,
   sendTripPosition,
   startSharedTrip,
   TripClosedError,
@@ -110,6 +111,23 @@ describe('backend local', () => {
     expect(buses).toEqual([
       { latitude: 8.7601, longitude: -75.88, travelers: 2, at: expect.any(Date) },
     ]);
+
+    // Fuera de Montería o con la hora desfasada, el servidor la rechaza con el motivo.
+    await new Promise((r) => setTimeout(r, 3_100)); // límite: una posición cada 3 s
+    await expect(sendTripPosition(a, tripA, position(10.39, -75.48))).rejects.toMatchObject({
+      name: 'PositionRejectedError',
+      reason: 'outside_area',
+    });
+    await expect(
+      sendTripPosition(a, tripA, {
+        ...position(8.76, -75.88),
+        recordedAt: new Date(Date.now() - 60 * 60_000),
+      }),
+    ).rejects.toMatchObject({ reason: 'clock' });
+    await expect(sendTripPosition(a, tripA, position(8.76, -75.88))).resolves.toBeUndefined();
+    await expect(sendTripPosition(a, tripA, position(8.76, -75.88))).rejects.toBeInstanceOf(
+      PositionRejectedError,
+    );
 
     // Volver a empezar cierra el viaje anterior (solo uno activo por persona).
     const tripA2 = await startSharedTrip(a, 'D1');
