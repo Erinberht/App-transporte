@@ -384,6 +384,16 @@ export type Database = {
           recorded_at: string;
         }[];
       };
+      live_occupancy: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          bus_id: string;
+          level: Database['public']['Enums']['occupancy_level'];
+          reported_at: string;
+          reports: number;
+          route_id: string;
+        }[];
+      };
       purge_expired_data: { Args: Record<PropertyKey, never>; Returns: undefined };
       route_live_buses: {
         Args: { p_route_id: string };

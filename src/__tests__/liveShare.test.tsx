@@ -5,6 +5,7 @@ import { renderRouter } from 'expo-router/testing-library';
 
 import * as transit from '../api/transit';
 import BusOnMapScreen from '../app/bus-en-el-mapa';
+import ChooseRouteScreen from '../app/elegir-ruta';
 import ShareTripScreen from '../app/compartir';
 import InTripScreen from '../app/en-viaje';
 import TripEndScreen from '../app/fin-del-viaje';
@@ -19,6 +20,8 @@ jest.mock('../api/transit', () => ({
   endSharedTrip: jest.fn(async () => {}),
   sendTripPosition: jest.fn(async () => {}),
   fetchRouteLiveBuses: jest.fn(async () => []),
+  reportOccupancy: jest.fn(async () => {}),
+  fetchLiveOccupancy: jest.fn(async () => ({ byRoute: {}, byBus: {} })),
 }));
 const api = jest.mocked(transit);
 const location = jest.mocked(Location);
@@ -33,6 +36,7 @@ function TestLayout() {
 const routes = {
   _layout: TestLayout,
   'bus-en-el-mapa': BusOnMapScreen,
+  'elegir-ruta': ChooseRouteScreen,
   compartir: ShareTripScreen,
   'en-viaje': InTripScreen,
   'fin-del-viaje': TripEndScreen,
@@ -134,5 +138,39 @@ describe('Compartir mi recorrido', () => {
     expect(
       await screen.findByText('Nadie comparte esta ruta ahora · posición estimada'),
     ).toBeOnTheScreen();
+  });
+
+  it('en viaje, el cupo se envía al servidor y respeta el límite de 2 minutos', async () => {
+    await renderRouter(routes, { initialUrl: '/compartir' });
+    await fireEvent.press(screen.getByText('Compartir'));
+    expect(await screen.findByText('Compartiendo tu recorrido en vivo')).toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByText('Lleno'));
+    expect(await screen.findByText('Enviado. Lo verán quienes esperan la T2.')).toBeOnTheScreen();
+    expect(api.reportOccupancy).toHaveBeenCalledWith(expect.anything(), 'trip-1', 'T2', 'full');
+    expect(screen.getByRole('radio', { selected: true })).toHaveTextContent('Lleno');
+
+    await fireEvent.press(screen.getByText('Vacío'));
+    expect(
+      await screen.findByText('Ya reportaste hace poco. Podrás actualizarlo en 2 min.'),
+    ).toBeOnTheScreen();
+    expect(api.reportOccupancy).toHaveBeenCalledTimes(1);
+    // Sigue marcado lo último que sí se envió.
+    expect(screen.getByRole('radio', { selected: true })).toHaveTextContent('Lleno');
+  });
+
+  it('el cupo de los viajeros aparece al esperar el bus y en la lista de rutas', async () => {
+    const at = new Date(Date.now() - 3 * 60_000);
+    api.fetchLiveOccupancy.mockResolvedValue({
+      byRoute: { T2: { level: 'full', reports: 2, at }, P3: { level: 'empty', reports: 1, at } },
+      byBus: {},
+    });
+
+    await renderRouter(routes, { initialUrl: '/bus-en-el-mapa' });
+    expect(await screen.findByText('Cupo lleno · hace 3 min · 2 viajeros')).toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByText('Buscar otra ruta'));
+    expect(await screen.findByText('Cupo vacío · hace 3 min · 1 viajero')).toBeOnTheScreen();
+    expect(screen.getByText('Cupo lleno · hace 3 min · 2 viajeros')).toBeOnTheScreen();
   });
 });

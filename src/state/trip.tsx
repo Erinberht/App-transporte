@@ -19,7 +19,8 @@ type TripState = {
   routeId: string;
   /** Opciones de caminata (como en Moovit): ritmo y límite por tramo. */
   walking: WalkingPrefs;
-  occupancy: Occupancy;
+  /** Último cupo que reportó el usuario en este viaje (null: aún no reporta). */
+  occupancy: Occupancy | null;
   /** Bus del QR escaneado; solo vale si es de la ruta elegida (ver linkedBusFor). */
   bus: LinkedBus | null;
   setDestinationId: (id: string) => void;
@@ -27,7 +28,7 @@ type TripState = {
   setOrigin: (value: LatLng | null) => void;
   setRouteId: (id: string) => void;
   setWalking: (value: WalkingPrefs) => void;
-  setOccupancy: (value: Occupancy) => void;
+  setOccupancy: (value: Occupancy | null) => void;
   setBus: (value: LinkedBus | null) => void;
   /** Termina el viaje: borra la ubicación y el estado del recorrido. Conserva destino y hora. */
   reset: () => void;
@@ -43,7 +44,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
   const [origin, setOrigin] = useState<LatLng | null>(null);
   const [routeId, setRouteId] = useState('T2');
   const [walking, setWalking] = useState<WalkingPrefs>(DEFAULT_WALKING);
-  const [occupancy, setOccupancy] = useState<Occupancy>('medium');
+  const [occupancy, setOccupancy] = useState<Occupancy | null>(null);
   const [bus, setBus] = useState<LinkedBus | null>(null);
 
   const value = useMemo<TripState>(
@@ -65,7 +66,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
       reset: () => {
         setOrigin(null);
         setRouteId('T2');
-        setOccupancy('medium');
+        setOccupancy(null);
         setBus(null);
       },
     }),

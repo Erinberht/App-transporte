@@ -4,6 +4,7 @@ import { shareMessage } from '../messages';
 import {
   createShareSession,
   type LocationMode,
+  MAX_OCCUPANCY_REPORTS,
   type LocationTracker,
   type ShareBackend,
   type StartOptions,
@@ -43,6 +44,7 @@ function setup(permission: LocationMode | 'denied' | 'services_off' = 'backgroun
     startTrip: jest.fn(async () => 'trip-1'),
     endTrip: jest.fn(async () => {}),
     sendPosition: jest.fn(async () => {}),
+    reportOccupancy: jest.fn(async () => {}),
   } satisfies ShareBackend;
   let hasBackend = true;
   const session = createShareSession({
@@ -286,6 +288,59 @@ describe('createShareSession', () => {
     await session.reset();
     expect(session.getStatus()).toEqual({ state: 'idle' });
     unsubscribe();
+  });
+});
+
+describe('reportar el cupo', () => {
+  it('se envía en el viaje activo y luego solo cada 2 minutos', async () => {
+    const t = setup();
+    await t.session.start(OPTIONS);
+    expect(await t.session.reportOccupancy('full')).toEqual({ kind: 'sent' });
+    expect(t.backend.reportOccupancy).toHaveBeenCalledWith('trip-1', 'P3', 'full');
+
+    await t.gps(30_000, onRoute(0));
+    expect(await t.session.reportOccupancy('medium')).toEqual({ kind: 'too_soon', waitMinutes: 2 });
+    await t.gps(70_000, onRoute(300));
+    expect(await t.session.reportOccupancy('medium')).toEqual({ kind: 'too_soon', waitMinutes: 1 });
+    expect(t.backend.reportOccupancy).toHaveBeenCalledTimes(1);
+
+    await t.gps(121_000, onRoute(600));
+    expect(await t.session.reportOccupancy('medium')).toEqual({ kind: 'sent' });
+  });
+
+  it('máximo 10 por viaje', async () => {
+    const t = setup();
+    await t.session.start(OPTIONS);
+    for (let i = 0; i < MAX_OCCUPANCY_REPORTS; i++) {
+      await t.gps(i * 121_000, onRoute(i * 400));
+      expect(await t.session.reportOccupancy('full')).toEqual({ kind: 'sent' });
+    }
+    await t.gps(MAX_OCCUPANCY_REPORTS * 121_000, onRoute(4_400));
+    expect(await t.session.reportOccupancy('full')).toEqual({ kind: 'max_reached' });
+  });
+
+  it('sin compartir no se puede reportar', async () => {
+    const t = setup();
+    expect(await t.session.reportOccupancy('full')).toEqual({ kind: 'not_sharing' });
+    expect(t.backend.reportOccupancy).not.toHaveBeenCalled();
+  });
+
+  it('respeta el límite del servidor y distingue la falta de conexión', async () => {
+    const t = setup();
+    await t.session.start(OPTIONS);
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    t.backend.reportOccupancy.mockRejectedValueOnce(
+      Object.assign(new Error('límite'), { name: 'OccupancyLimitError', reason: 'too_soon' }),
+    );
+    expect(await t.session.reportOccupancy('full')).toEqual({ kind: 'too_soon', waitMinutes: 2 });
+
+    const t2 = setup();
+    await t2.session.start(OPTIONS);
+    t2.backend.reportOccupancy.mockRejectedValueOnce(new Error('Network request failed'));
+    expect(await t2.session.reportOccupancy('full')).toEqual({ kind: 'offline' });
+    // Tras un fallo de red se puede reintentar enseguida.
+    expect(await t2.session.reportOccupancy('full')).toEqual({ kind: 'sent' });
+    warn.mockRestore();
   });
 });
 

@@ -6,6 +6,7 @@
 // ella y el servidor cierra el viaje a los 10 minutos sin posiciones (close_stale_trips).
 import { distanceMeters, type LatLng } from '../data/geo';
 import { isInMonteria } from '../data/validate';
+import type { Occupancy } from '../types';
 import {
   detectTripEnd,
   MAX_ACCURACY_METERS,
@@ -36,7 +37,24 @@ export interface ShareBackend {
    * name 'PositionRejectedError' y `reason` si rechazó la posición (ver SendProblem).
    */
   sendPosition(tripId: string, sample: LocationSample): Promise<void>;
+  /** Debe lanzar name 'OccupancyLimitError' con `reason` si el servidor aplica su límite. */
+  reportOccupancy(tripId: string, routeId: string, level: Occupancy): Promise<void>;
 }
+
+/** Resultado de reportar el cupo. */
+export type OccupancyReportResult =
+  | { kind: 'sent' }
+  /** Hay que esperar: un reporte cada 2 minutos por viaje. */
+  | { kind: 'too_soon'; waitMinutes: number }
+  /** Ya se enviaron los 10 reportes permitidos en este viaje. */
+  | { kind: 'max_reached' }
+  /** Solo se reporta mientras se comparte el recorrido (hace falta un viaje activo). */
+  | { kind: 'not_sharing' }
+  | { kind: 'offline' };
+
+/** Límites del servidor (check_occupancy_report), revisados también aquí para avisar antes. */
+export const OCCUPANCY_INTERVAL_MS = 2 * 60_000;
+export const MAX_OCCUPANCY_REPORTS = 10;
 
 /** Por qué no está llegando la posición al servidor. */
 export type SendProblem =
@@ -118,6 +136,7 @@ export function createShareSession(deps: {
   let lastSent: LocationSample | null = null;
   let sending = false;
   let lastOptions: StartOptions | null = null;
+  let occupancy = { tripId: '', count: 0, lastAt: 0 };
 
   function set(next: ShareStatus) {
     status = next;
@@ -254,6 +273,43 @@ export function createShareSession(deps: {
     }
   }
 
+  async function reportOccupancy(level: Occupancy): Promise<OccupancyReportResult> {
+    const backend = deps.backend();
+    if (status.state !== 'sharing' || !backend) return { kind: 'not_sharing' };
+    const { tripId, routeId } = status;
+    if (occupancy.tripId !== tripId) occupancy = { tripId, count: 0, lastAt: 0 };
+    const t = now();
+    if (occupancy.count >= MAX_OCCUPANCY_REPORTS) return { kind: 'max_reached' };
+    if (occupancy.lastAt && t - occupancy.lastAt < OCCUPANCY_INTERVAL_MS) {
+      return {
+        kind: 'too_soon',
+        waitMinutes: Math.max(
+          1,
+          Math.ceil((OCCUPANCY_INTERVAL_MS - (t - occupancy.lastAt)) / 60_000),
+        ),
+      };
+    }
+    try {
+      await backend.reportOccupancy(tripId, routeId, level);
+      occupancy = { tripId, count: occupancy.count + 1, lastAt: now() };
+      return { kind: 'sent' };
+    } catch (e) {
+      const err = e as { name?: string; reason?: string };
+      console.warn('[cupo] reporte fallido:', err.name ?? '', err.reason ?? '');
+      if (err.name === 'TripClosedError') {
+        await finish('timeout', { skipServer: true });
+        return { kind: 'not_sharing' };
+      }
+      if (err.name === 'OccupancyLimitError') {
+        if (err.reason === 'max_reached') return { kind: 'max_reached' };
+        // El servidor cuenta desde su último reporte: se asume el intervalo completo.
+        occupancy = { ...occupancy, lastAt: now() };
+        return { kind: 'too_soon', waitMinutes: 2 };
+      }
+      return { kind: 'offline' };
+    }
+  }
+
   async function finish(
     reason: EndReason,
     opts: { skipServer?: boolean; error?: ShareError } = {},
@@ -288,6 +344,8 @@ export function createShareSession(deps: {
     start,
     /** Reintenta el último inicio (tras un error de permiso, GPS o conexión). */
     retry: () => (lastOptions ? start(lastOptions) : Promise.resolve()),
+    /** Reporta el cupo (Lleno / Medio / Vacío) en el viaje activo. */
+    reportOccupancy,
     /** "Dejar de compartir". */
     stop: () => finish('user'),
     /** Vuelve al estado inicial (al terminar el flujo del viaje). Detiene si seguía. */

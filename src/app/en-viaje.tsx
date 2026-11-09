@@ -10,6 +10,7 @@ import {
   UsersRound,
   type LucideIcon,
 } from 'lucide-react-native';
+import { useState } from 'react';
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { LiveBadge } from '../components/LiveBadge';
@@ -21,6 +22,9 @@ import { useNow } from '../lib/useNow';
 import { tripOptionFor, useRoutePlan } from '../planner/useRoutePlan';
 import { liveShare, useShareStatus } from '../sharing/liveShare';
 import { shareMessage, type ShareTone } from '../sharing/messages';
+import { occupancyText } from '../sharing/occupancyText';
+import type { OccupancyReportResult } from '../sharing/shareSession';
+import { useLiveOccupancy } from '../sharing/useLiveOccupancy';
 import { linkedBusFor, useTrip } from '../state/trip';
 import { colors, fonts, fontSize, lineHeight, radius } from '../theme';
 import type { Occupancy } from '../types';
@@ -38,6 +42,28 @@ const TONES: Record<ShareTone, string> = {
   muted: colors.textMuted,
 };
 
+/** Qué decirle al usuario después de tocar Lleno / Medio / Vacío. */
+export function reportFeedback(
+  result: OccupancyReportResult,
+  routeName: string,
+): { text: string; tone: ShareTone } {
+  switch (result.kind) {
+    case 'sent':
+      return { text: `Enviado. Lo verán quienes esperan la ${routeName}.`, tone: 'success' };
+    case 'too_soon':
+      return {
+        text: `Ya reportaste hace poco. Podrás actualizarlo en ${result.waitMinutes} min.`,
+        tone: 'warning',
+      };
+    case 'max_reached':
+      return { text: 'Ya enviaste el máximo de reportes de este viaje. ¡Gracias!', tone: 'muted' };
+    case 'not_sharing':
+      return { text: 'El cupo se envía solo mientras compartes tu recorrido.', tone: 'warning' };
+    case 'offline':
+      return { text: 'Sin conexión: no se envió. Intenta de nuevo.', tone: 'danger' };
+  }
+}
+
 // "En viaje"
 export default function InTripScreen() {
   const { routeId, origin, occupancy, setOccupancy, bus: scannedBus } = useTrip();
@@ -45,8 +71,22 @@ export default function InTripScreen() {
   const bus = linkedBusFor(scannedBus, route.id);
   const boardStopId = tripOptionFor(useRoutePlan(), route.id)?.boardStop.id;
   const share = useShareStatus();
-  const message = shareMessage(share, useNow(5_000));
+  const now = useNow(5_000);
+  const message = shareMessage(share, now);
   const active = share.state === 'sharing' || share.state === 'starting';
+  const live = useLiveOccupancy();
+  const others = (bus && live.byBus[bus.id]) || live.byRoute[route.id];
+  const [feedback, setFeedback] = useState<{ text: string; tone: ShareTone } | null>(null);
+  const [sending, setSending] = useState(false);
+
+  async function report(level: Occupancy) {
+    if (sending) return;
+    setSending(true);
+    const result = await liveShare.reportOccupancy(level);
+    setSending(false);
+    if (result.kind === 'sent') setOccupancy(level);
+    setFeedback(reportFeedback(result, route.shortName));
+  }
 
   return (
     <ScreenLayout
@@ -106,7 +146,9 @@ export default function InTripScreen() {
                 key={value}
                 accessibilityRole="radio"
                 accessibilityState={{ selected }}
-                onPress={() => setOccupancy(value)}
+                accessibilityLabel={`${OCCUPANCY_LABEL[value]}${selected ? ', enviado' : ''}`}
+                disabled={sending}
+                onPress={() => report(value)}
                 style={[styles.option, selected && styles.optionSelected]}
               >
                 <Icon size={20} color={selected ? colors.primary : colors.textMuted} />
@@ -117,8 +159,18 @@ export default function InTripScreen() {
             );
           })}
         </View>
+        <Text
+          style={[styles.confirm, feedback && { color: TONES[feedback.tone] }]}
+          accessibilityLiveRegion="polite"
+        >
+          {feedback?.text ??
+            (occupancy
+              ? `Reportaste cupo ${OCCUPANCY_LABEL[occupancy].toLowerCase()}`
+              : 'Toca una opción para avisar a quienes esperan este bus.')}
+        </Text>
         <Text style={styles.confirm}>
-          Cupo {OCCUPANCY_LABEL[occupancy].toLowerCase()} seleccionado
+          {bus && live.byBus[bus.id] ? 'En este bus: ' : 'En la ruta: '}
+          {occupancyText(others, now)}
         </Text>
       </View>
 

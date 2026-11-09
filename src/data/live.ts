@@ -1,7 +1,7 @@
 import type { Occupancy } from '../types';
 
-// Estado EN VIVO de MUESTRA (llegada y avisos). Se reemplaza en la etapa 3 por la posición
-// compartida por los viajeros, los reportes de cupo y la detección de retrasos.
+// Estado EN VIVO de MUESTRA (llegada sin ubicación y avisos). El cupo ya es real
+// (src/sharing/useLiveOccupancy.ts); los avisos se reemplazan en la etapa 3.4.
 export type LiveStatus = {
   /** Minutos estimados de llegada a la parada del usuario. */
   etaMinutes: number;

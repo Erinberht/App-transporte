@@ -59,6 +59,15 @@ Las reglas están en `alighting.ts`:
 - Si el GPS no da la velocidad, se calcula con las posiciones.
 - **Limitación:** el recorrido de las rutas es ficticio. Si el bus real pasa a más de 80 m de la línea dibujada, la primera regla podría cortar antes de tiempo. Con recorridos reales (`verificado`) desaparece el problema.
 
+## Cupo del bus
+
+En "En viaje", los botones **Lleno / Medio / Vacío** envían el reporte al servidor (`liveShare.reportOccupancy`). Solo se puede reportar mientras se comparte el recorrido, porque el reporte va asociado al viaje anónimo.
+
+- **Límites:** un reporte cada 2 minutos y máximo 10 por viaje (`check_occupancy_report`). La app los revisa antes de enviar y avisa: "Podrás actualizarlo en 1 min".
+- **Regla:** `live_occupancy()` toma los reportes de los últimos 10 minutos y cuenta **un voto por viajero**, su último reporte. Gana el nivel con más votos; en empate, el más reciente.
+- **Agregación:** por ruta y, para los viajeros que escanearon el QR, por buseta. En "En viaje" se muestra primero el de tu buseta.
+- **Dónde se ve:** "Esperando tu bus" y "Elegir ruta" muestran, por ejemplo, "Cupo medio · hace 3 min · 2 viajeros", consultado cada 30 s (`useLiveOccupancy`). Sin reportes recientes se dice tal cual.
+
 ## Servidor
 
 - `route_live_buses(ruta)`: agrupa a los viajeros que están a menos de 300 m entre sí (`ST_ClusterDBSCAN`) y devuelve un bus por grupo. Incluye el centro del grupo, redondeado a 4 decimales (~11 m), y cuántos viajeros lo forman. Así dos P3 en lados opuestos de la ciudad no se promedian en un punto falso.
