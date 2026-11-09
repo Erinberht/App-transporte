@@ -241,7 +241,7 @@ export function recommendRoutes(input: PlanInput): Plan {
 }
 
 /** Texto de la etiqueta de llegada, ej. "Llegas 15 min antes". */
-export function arrivalLabel(option: TripOption): string {
+export function arrivalLabel(option: Pick<TripOption, 'status' | 'marginMinutes'>): string {
   if (option.status === 'late') return `Llegas tarde · ${-option.marginMinutes} min`;
   if (option.status === 'just') return 'Llegas justo';
   return `Llegas ${option.marginMinutes} min antes`;

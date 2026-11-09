@@ -50,6 +50,7 @@ Funciones (RPC):
 - `route_live_status(route_id)`: viajes activos, posición del bus más concurrido (redondeada a unos 10 m) y cupo más reportado en los últimos 10 minutos.
 - `route_live_buses(route_id)`: un bus por grupo de viajeros a menos de 300 m entre sí, con su posición y cuántos lo comparten (ver `docs/COMPARTIR.md`).
 - `live_occupancy()`: cupo de los últimos 10 minutos por ruta y por buseta. Cuenta un voto por viajero (su último reporte); gana el nivel con más votos y, en empate, el más reciente. Ver `docs/COMPARTIR.md`.
+- `live_incidents()`: avisos de los viajeros (buseta varada, desvío, retraso) de los últimos 30 minutos, por ruta y tipo, con cuántos viajeros lo reportaron y la parada más cercana (~100 m). Los reportes van en `incident_reports`: solo desde un viaje activo propio, cada tipo una vez por viaje, y el lugar lo pone el servidor.
 - `check_trip_bus()`: trigger interno; un viaje solo se vincula a una buseta activa de su misma ruta (QR, ver `docs/QR_FORMAT.md`).
 - `close_stale_trips()`: solo interna; pg_cron la ejecuta cada 5 minutos y cierra los viajes con 10 minutos sin posiciones.
 - `delete_my_data()`: "Borrar mis datos". Elimina el usuario anónimo y, en cascada, su perfil, sus viajes, sus posiciones y sus reportes.

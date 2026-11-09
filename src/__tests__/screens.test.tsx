@@ -69,15 +69,19 @@ describe('Pantallas del flujo', () => {
     expect(screen).toHavePathname('/bus-en-el-mapa');
   });
 
-  it('2 · Esperando tu bus: muestra la llegada y el aviso de otra ruta', async () => {
+  it('2 · Esperando tu bus: muestra la llegada y no inventa avisos', async () => {
     await open('/bus-en-el-mapa');
 
     expect(screen.getByText('Esperando tu bus')).toBeOnTheScreen();
     // La paginación del prototipo ("2 de 5") ya no aparece.
     expect(screen.queryByText(/de 5$/)).not.toBeOnTheScreen();
     expect(screen.getByText('Llega en 5 min')).toBeOnTheScreen();
-    expect(screen.getByText('Rancho Grande: sin reportes')).toBeOnTheScreen();
-    expect(screen.getByText('En vivo')).toBeOnTheScreen();
+    // Sin reportes de viajeros no hay avisos, y sin buses compartiendo no dice "En vivo".
+    expect(screen.queryByText(/ viajeros? reporta/)).not.toBeOnTheScreen();
+    expect(screen.queryByText('En vivo')).not.toBeOnTheScreen();
+    expect(
+      screen.getByText('Nadie comparte esta ruta ahora · posición estimada'),
+    ).toBeOnTheScreen();
     expect(screen.getByText('Recorrido aproximado (datos de prueba)')).toBeOnTheScreen();
 
     await fireEvent.press(screen.getByText('Ya subí'));

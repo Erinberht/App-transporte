@@ -14,10 +14,13 @@ import {
   ensureAnonymousSession,
   fetchRouteLiveBuses,
   fetchRouteLiveStatus,
+  fetchLiveIncidents,
   fetchLiveOccupancy,
   fetchTransitDataset,
   lookupBus,
+  IncidentLimitError,
   OccupancyLimitError,
+  reportIncident,
   reportOccupancy,
   PositionRejectedError,
   sendTripPosition,
@@ -189,5 +192,43 @@ describe('backend local', () => {
     await deleteMyData(a);
     await deleteMyData(b);
     expect((await fetchLiveOccupancy(anon)).byRoute.AE).toBeUndefined();
+  });
+
+  it('incidentes: quien va en el bus reporta; todos ven el aviso con la parada cercana', async () => {
+    const anon = newClient();
+    const a = newClient();
+    const tripA = await startSharedTrip(a, 'RG');
+    // Posición junto a una parada del seed para que el aviso diga "cerca de ...".
+    const { data: stop } = await anon
+      .from('stops')
+      .select('name')
+      .eq('id', 'calle22-cra6')
+      .single();
+    await sendTripPosition(a, tripA, {
+      latitude: dataset.stops.find((s) => s.id === 'calle22-cra6')!.coordinate.latitude,
+      longitude: dataset.stops.find((s) => s.id === 'calle22-cra6')!.coordinate.longitude,
+      recordedAt: new Date(),
+      speedMps: 0,
+      accuracyM: 10,
+    });
+
+    await reportIncident(a, tripA, 'RG', 'broken_down');
+    await expect(reportIncident(a, tripA, 'RG', 'broken_down')).rejects.toMatchObject({
+      name: 'IncidentLimitError',
+      reason: 'already_reported',
+    });
+    await expect(reportIncident(a, tripA, 'RG', 'broken_down')).rejects.toBeInstanceOf(
+      IncidentLimitError,
+    );
+
+    const incidents = await fetchLiveIncidents(anon);
+    expect(incidents.find((i) => i.routeId === 'RG')).toMatchObject({
+      kind: 'broken_down',
+      reports: 1,
+      nearStop: stop!.name,
+    });
+
+    await deleteMyData(a);
+    expect((await fetchLiveIncidents(anon)).find((i) => i.routeId === 'RG')).toBeUndefined();
   });
 });

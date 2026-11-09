@@ -289,3 +289,70 @@ export async function fetchLiveOccupancy(client: AppSupabaseClient): Promise<Liv
   }
   return result;
 }
+
+export type IncidentKind = Database['public']['Enums']['incident_kind'];
+
+/** El servidor no aceptó el reporte de incidente por sus límites. */
+export class IncidentLimitError extends ApiError {
+  constructor(
+    readonly reason: 'already_reported' | 'max_reached',
+    cause?: unknown,
+  ) {
+    super('El servidor no aceptó el reporte', cause);
+    this.name = 'IncidentLimitError';
+  }
+}
+
+/**
+ * Reporta un incidente del bus en el viaje activo. El lugar lo pone el servidor con la última
+ * posición del viaje; la app no puede elegirlo.
+ */
+export async function reportIncident(
+  client: AppSupabaseClient,
+  tripId: string,
+  routeId: string,
+  kind: IncidentKind,
+): Promise<void> {
+  const { error } = await client
+    .from('incident_reports')
+    .insert({ trip_id: tripId, route_id: routeId, kind });
+  if (!error) return;
+  if (error.code === TRIP_CLOSED) throw new TripClosedError(error);
+  if (error.code === CHECK_VIOLATION) {
+    throw new IncidentLimitError(
+      /máximo/i.test(error.message ?? '') ? 'max_reached' : 'already_reported',
+      error,
+    );
+  }
+  throw new ApiError('No se pudo enviar el reporte', error);
+}
+
+export type LiveIncident = {
+  routeId: string;
+  kind: IncidentKind;
+  /** Cuántos viajeros lo reportaron en los últimos 30 minutos. */
+  reports: number;
+  at: Date;
+  /** Centro de los reportes (~100 m) y parada más cercana, si se conocen. */
+  location: { latitude: number; longitude: number } | null;
+  nearStop: string | null;
+};
+
+/** Incidentes de los últimos 30 minutos en todas las rutas. No necesita sesión. */
+export async function fetchLiveIncidents(client: AppSupabaseClient): Promise<LiveIncident[]> {
+  const { data, error } = await client.rpc('live_incidents');
+  if (error) throw new ApiError('No se pudo consultar los avisos', error);
+  return (data ?? []).map((row) => {
+    // Pueden venir en null aunque los tipos generados digan lo contrario.
+    const lat = row.latitude as number | null;
+    const lng = row.longitude as number | null;
+    return {
+      routeId: row.route_id,
+      kind: row.kind,
+      reports: row.reports,
+      at: new Date(row.reported_at),
+      location: lat !== null && lng !== null ? { latitude: lat, longitude: lng } : null,
+      nearStop: (row.near_stop as string | null) ?? null,
+    };
+  });
+}

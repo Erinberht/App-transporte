@@ -1,14 +1,5 @@
 import { router } from 'expo-router';
-import {
-  AlertTriangle,
-  BusFront,
-  Check,
-  Clock3,
-  Info,
-  Radio,
-  Search,
-  Users,
-} from 'lucide-react-native';
+import { AlertTriangle, BusFront, Check, Clock3, Radio, Search, Users } from 'lucide-react-native';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { AdBanner } from '../components/AdBanner';
@@ -17,14 +8,18 @@ import { LiveBadge } from '../components/LiveBadge';
 import { RouteMap } from '../components/RouteMap';
 import { ScreenLayout } from '../components/ScreenLayout';
 import { SAMPLE_ADS } from '../data/ads';
-import { getLiveStatus, noticeForOtherRoute } from '../data/live';
+import { getLiveStatus } from '../data/live';
 import { getRouteOrDefault, routesRepository } from '../data/repository';
 import { dateToClassTime, formatClassTime } from '../lib/classTime';
 import { useNow } from '../lib/useNow';
+import { assessWaiting } from '../planner/disruption';
+import { nextLiveArrival } from '../planner/liveEta';
 import { arrivalLabel, type ArrivalStatus } from '../planner/recommend';
 import { tripOptionFor, useRoutePlan } from '../planner/useRoutePlan';
+import { incidentText } from '../sharing/incidentText';
 import { occupancyText } from '../sharing/occupancyText';
 import { useLiveBuses } from '../sharing/useLiveBuses';
+import { useLiveIncidents } from '../sharing/useLiveIncidents';
 import { useLiveOccupancy } from '../sharing/useLiveOccupancy';
 import { useTrip } from '../state/trip';
 import { colors, fonts, fontSize, lineHeight, radius } from '../theme';
@@ -38,25 +33,43 @@ const STATUS_COLORS: Record<ArrivalStatus, { fg: string; bg: string }> = {
 };
 
 // "Esperando tu bus": dónde va el bus, cuándo pasa por tu parada y si así llegas a tiempo.
-// Si no te conviene esperar, "Buscar otra ruta" vuelve a la lista. Al subir, "Ya subí".
+// Con viajeros compartiendo, la hora es en vivo; si alguien reporta que la buseta se varó, se
+// desvió o va muy retrasada, se avisa y se sugiere la mejor otra ruta. Al subir, "Ya subí".
 export default function BusOnMapScreen() {
-  const { routeId, origin } = useTrip();
+  const { routeId, origin, setRouteId } = useTrip();
   const route = getRouteOrDefault(routeId);
   const plan = useRoutePlan();
   const option = tripOptionFor(plan, route.id);
-  // Aviso de otra ruta (ej. "Rancho Grande: sin reportes"). Aquí irán retrasos, tráfico y desvíos.
-  const notice = noticeForOtherRoute(route.id);
   const verified = routesRepository.getPattern(route.id)?.quality === 'verificado';
   const liveBuses = useLiveBuses(route.id);
   const travelers = liveBuses.reduce((sum, b) => sum + b.travelers, 0);
   const now = useNow(15_000);
   const occupancy = useLiveOccupancy().byRoute[route.id];
+  const allIncidents = useLiveIncidents();
 
-  // Con ubicación, la hora sale del motor de recomendación; sin ella, del estado de muestra.
-  const etaMinutes = option
-    ? Math.max(0, Math.round((option.boardAt.getTime() - now) / 60_000))
-    : getLiveStatus(route.id).etaMinutes;
-  const status = option ? STATUS_COLORS[option.status] : null;
+  // Con ubicación: horario del motor de recomendación, corregido con los buses en vivo.
+  // Sin ubicación no hay parada de subida: hora de muestra.
+  const situation =
+    option && plan
+      ? assessWaiting({
+          option,
+          plan,
+          liveEtaMinutes: nextLiveArrival(
+            liveBuses,
+            routesRepository.getPattern(route.id)?.shape ?? [],
+            routesRepository.getPatternStops(route.id),
+            option.boardStop,
+            option.walkToStopMinutes,
+          ),
+          incidents: allIncidents,
+          now,
+        })
+      : null;
+  const incidents = situation?.incidents ?? allIncidents.filter((i) => i.routeId === route.id);
+  const etaMinutes = situation?.etaMinutes ?? getLiveStatus(route.id).etaMinutes;
+  const status = situation ? STATUS_COLORS[situation.status] : null;
+  const alternative = situation?.alternative;
+  const altRoute = alternative ? getRouteOrDefault(alternative.routeId) : null;
 
   return (
     <ScreenLayout
@@ -72,12 +85,17 @@ export default function BusOnMapScreen() {
       onCta={() => router.push('/compartir')}
       gap={14}
     >
-      {notice ? (
-        <View style={styles.notice}>
-          <Info size={18} color={colors.danger} />
-          <Text style={styles.noticeText}>{notice}</Text>
+      {incidents.map((incident) => (
+        <View
+          key={incident.kind}
+          style={styles.notice}
+          accessibilityRole="alert"
+          accessibilityLiveRegion="polite"
+        >
+          <AlertTriangle size={18} color={colors.danger} />
+          <Text style={styles.noticeText}>{incidentText(incident, route.shortName, now)}</Text>
         </View>
-      ) : null}
+      ))}
 
       <RouteMap
         height={250}
@@ -94,7 +112,7 @@ export default function BusOnMapScreen() {
             <BusFront size={20} color={colors.text} />
             <Text style={styles.routeName}>{route.shortName}</Text>
           </View>
-          <LiveBadge />
+          {situation?.live ? <LiveBadge /> : null}
         </View>
         <View style={styles.row}>
           <Text style={styles.eta}>
@@ -102,13 +120,13 @@ export default function BusOnMapScreen() {
           </Text>
           <Clock3 size={24} color={colors.success} />
         </View>
-        {option && status ? (
+        {situation && status ? (
           <View style={styles.row}>
             <Text style={styles.detail}>
-              Pasa a las {clock(option.boardAt)} · llegas {clock(option.arriveAt)}
+              Pasa a las {clock(situation.boardAt)} · llegas {clock(situation.arriveAt)}
             </Text>
             <View style={[styles.tag, { backgroundColor: status.bg }]}>
-              <Text style={[styles.tagText, { color: status.fg }]}>{arrivalLabel(option)}</Text>
+              <Text style={[styles.tagText, { color: status.fg }]}>{arrivalLabel(situation)}</Text>
             </View>
           </View>
         ) : null}
@@ -128,13 +146,34 @@ export default function BusOnMapScreen() {
         </View>
       </View>
 
-      {option?.status === 'late' ? (
+      {situation?.delayMinutes ? (
+        <View style={styles.late} accessibilityLiveRegion="polite">
+          <Clock3 size={18} color={colors.danger} />
+          <Text style={styles.lateText}>
+            {`Posible retraso: según los viajeros, el bus pasa en ${situation.etaMinutes} min, unos ${situation.delayMinutes} min más tarde de lo que dice el horario.`}
+          </Text>
+        </View>
+      ) : null}
+
+      {situation?.status === 'late' ? (
         <View style={styles.late} accessibilityLiveRegion="polite">
           <AlertTriangle size={18} color={colors.danger} />
           <Text style={styles.lateText}>
-            Con este bus llegas tarde a tu clase de las {clock(plan!.arriveBy)}. Mira si otra ruta
-            te sirve más.
+            Con este bus llegas tarde a tu clase de las {clock(plan!.arriveBy)}.
           </Text>
+        </View>
+      ) : null}
+
+      {alternative && altRoute ? (
+        <View style={styles.alternative}>
+          <Text style={styles.altTitle}>Mejor alternativa: ruta {altRoute.shortName}</Text>
+          <Text style={styles.detail}>
+            {`Sube en ${alternative.boardStop.name} a las ${clock(alternative.boardAt)} · llegas ${clock(alternative.arriveAt)} · ${arrivalLabel(alternative)}`}
+          </Text>
+          <Button
+            label={`Cambiar a ${altRoute.shortName}`}
+            onPress={() => setRouteId(alternative.routeId)}
+          />
         </View>
       ) : null}
 
@@ -189,6 +228,15 @@ const styles = StyleSheet.create({
   detail: { fontFamily: fonts.medium, fontSize: fontSize.small, color: colors.text },
   tag: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: radius.chip },
   tagText: { fontFamily: fonts.semibold, fontSize: fontSize.caption },
+  alternative: {
+    gap: 10,
+    padding: 16,
+    borderRadius: radius.md,
+    backgroundColor: colors.primarySoft,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  altTitle: { fontFamily: fonts.semibold, fontSize: fontSize.lead, color: colors.primary },
   liveSource: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   liveSourceText: { fontFamily: fonts.regular, fontSize: fontSize.small, color: colors.textMuted },
   occupancyText: { fontFamily: fonts.medium, color: colors.text },

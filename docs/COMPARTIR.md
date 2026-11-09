@@ -68,6 +68,23 @@ En "En viaje", los botones **Lleno / Medio / Vacío** envían el reporte al serv
 - **Agregación:** por ruta y, para los viajeros que escanearon el QR, por buseta. En "En viaje" se muestra primero el de tu buseta.
 - **Dónde se ve:** "Esperando tu bus" y "Elegir ruta" muestran, por ejemplo, "Cupo medio · hace 3 min · 2 viajeros", consultado cada 30 s (`useLiveOccupancy`). Sin reportes recientes se dice tal cual.
 
+## Avisos: buseta varada, desvío o retraso (etapa 3.4)
+
+**Reportar.** En "En viaje", quien comparte puede tocar **Se varó**, **Cambió de ruta o se desvió** o **Va muy retrasada** (`liveShare.reportIncident`).
+
+- **Límites:** cada tipo una vez por viaje. Lo controla el trigger `check_incident_report`.
+- **Lugar:** lo pone el servidor con la última posición del propio viaje. La app no puede elegirlo.
+- **Bus quieto:** si el bus lleva 5 minutos quieto sobre el recorrido y lejos de la parada de bajada (`detectStuck`), la app pregunta "¿Se varó?". Se responde con "Sí, se varó" o "No, es el tráfico", y no vuelve a preguntar en ese viaje.
+
+**Avisar.** `live_incidents()` agrupa los reportes de los últimos 30 minutos por ruta y tipo, con cuántos viajeros los hicieron y la parada más cercana. La app lo consulta cada 30 s (`useLiveIncidents`).
+
+- **"Elegir ruta":** "⚠ La P3 se varó cerca de Calle 22 · hace 4 min · 2 viajeros reportan". La recomendada nunca es una ruta varada o desviada.
+- **"Esperando tu bus":** el mismo aviso, más la **mejor alternativa** (`bestAlternative`) con un botón "Cambiar a M1". La alternativa es una ruta que llega a tiempo y no tiene avisos graves.
+
+**Hora en vivo y retrasos (`src/planner/liveEta.ts` y `disruption.ts`).** Con viajeros compartiendo, la hora de paso sale del bus en vivo más cercano que aún no pasa por tu parada y que alcanzas a tomar. Se ubica el bus sobre el recorrido y se interpolan los minutos entre paradas. Si esa hora es 10 minutos o más posterior a la del horario, se avisa **"Posible retraso"** y se sugiere la alternativa.
+
+- **Limitación:** el servicio es por frecuencia y los horarios son ficticios. Un bus que nadie comparte puede llegar antes que el que se ve en vivo, por eso el aviso dice "posible".
+
 ## Servidor
 
 - `route_live_buses(ruta)`: agrupa a los viajeros que están a menos de 300 m entre sí (`ST_ClusterDBSCAN`) y devuelve un bus por grupo. Incluye el centro del grupo, redondeado a 4 decimales (~11 m), y cuántos viajeros lo forman. Así dos P3 en lados opuestos de la ciudad no se promedian en un punto falso.

@@ -64,6 +64,59 @@ export type Database = {
         };
         Relationships: [];
       };
+      incident_reports: {
+        Row: {
+          bus_id: string | null;
+          id: number;
+          kind: Database['public']['Enums']['incident_kind'];
+          location: unknown;
+          reported_at: string;
+          route_id: string;
+          trip_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          bus_id?: string | null;
+          id?: never;
+          kind: Database['public']['Enums']['incident_kind'];
+          location?: unknown;
+          reported_at?: string;
+          route_id: string;
+          trip_id: string;
+        };
+        Update: {
+          bus_id?: string | null;
+          id?: never;
+          kind?: Database['public']['Enums']['incident_kind'];
+          location?: unknown;
+          reported_at?: string;
+          route_id?: string;
+          trip_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'incident_reports_bus_id_fkey';
+            columns: ['bus_id'];
+            isOneToOne: false;
+            referencedRelation: 'buses';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'incident_reports_route_id_fkey';
+            columns: ['route_id'];
+            isOneToOne: false;
+            referencedRelation: 'routes';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'incident_reports_trip_id_fkey';
+            columns: ['trip_id'];
+            isOneToOne: false;
+            referencedRelation: 'shared_trips';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       occupancy_reports: {
         Row: {
           id: number;
@@ -384,6 +437,18 @@ export type Database = {
           recorded_at: string;
         }[];
       };
+      live_incidents: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          kind: Database['public']['Enums']['incident_kind'];
+          latitude: number;
+          longitude: number;
+          near_stop: string;
+          reported_at: string;
+          reports: number;
+          route_id: string;
+        }[];
+      };
       live_occupancy: {
         Args: Record<PropertyKey, never>;
         Returns: {
@@ -420,6 +485,7 @@ export type Database = {
     Enums: {
       data_quality: 'ficticio' | 'aproximado' | 'verificado';
       day_type: 'weekday' | 'saturday' | 'sunday_holiday';
+      incident_kind: 'broken_down' | 'detour' | 'big_delay';
       occupancy_level: 'full' | 'medium' | 'empty';
       trip_end_reason: 'user' | 'auto_alighted' | 'timeout';
     };
@@ -535,6 +601,7 @@ export const Constants = {
     Enums: {
       data_quality: ['ficticio', 'aproximado', 'verificado'],
       day_type: ['weekday', 'saturday', 'sunday_holiday'],
+      incident_kind: ['broken_down', 'detour', 'big_delay'],
       occupancy_level: ['full', 'medium', 'empty'],
       trip_end_reason: ['user', 'auto_alighted', 'timeout'],
     },
