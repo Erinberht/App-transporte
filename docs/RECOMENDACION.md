@@ -24,7 +24,9 @@ Igual que en Moovit (Configuración → Planificador de viajes → Opciones de c
 | Ritmo                                  | normal o **lento** (el doble de tiempo en cada tramo a pie) | normal         |
 | Duración máxima de caminata, por tramo | 2 a 16 minutos                                              | **sin límite** |
 
-Moovit no publica su velocidad base: los 4,5 km/h y el factor 1,3 son supuestos nuestros. Las preferencias viven en el estado del viaje (`walking` en `src/state/trip.tsx`). La pantalla para editarlas llega con el perfil (etapa 4.1).
+Moovit no publica su velocidad base: los 4,5 km/h y el factor 1,3 son supuestos nuestros. Las preferencias se guardan en el perfil (`src/profile`, ver `docs/PERFIL.md`) y se editan en "Mi perfil" (el límite, de 2 en 2 minutos). El estado del viaje (`walking` en `src/state/trip.tsx`) las lee de ahí.
+
+El destino puede ser la universidad o un lugar del perfil. Una ruta no sirve si su parada más cercana al destino queda a más de 1,2 km (`MAX_ALIGHT_DISTANCE_METERS`); si ninguna sirve, `noRouteNotice` arma el aviso de "Elegir ruta".
 
 ## Orden y etiquetas
 

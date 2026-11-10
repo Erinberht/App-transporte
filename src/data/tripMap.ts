@@ -1,14 +1,14 @@
-import { getDestination, DEFAULT_DESTINATION_ID } from './destinations';
+import { DESTINATIONS } from './destinations';
 import { distanceMeters, regionFor, type LatLng } from './geo';
 import type { DataQuality } from './model';
 import { getRouteOrDefault, routesRepository } from './repository';
 
 export type TripMapData = {
-  /** Polilínea del recorrido hacia la universidad. */
+  /** Polilínea del recorrido de la ruta. */
   path: LatLng[];
   /** Parada donde el usuario toma el bus. */
   userStop: LatLng;
-  /** Parada de la universidad (la más cercana al destino). */
+  /** Parada de bajada: la más cercana al destino (como en el motor de recomendación). */
   destinationStop: LatLng;
   /** Posición del bus. MUESTRA: un punto antes de la parada del usuario (sin tiempo real aún). */
   busPosition: LatLng;
@@ -28,7 +28,8 @@ function nearestIndex(path: LatLng[], point: LatLng): number {
 export function tripMapData(
   routeId: string | undefined,
   origin: LatLng | null = null,
-  destinationId = DEFAULT_DESTINATION_ID,
+  /** Destino del viaje; sin valor, la universidad. */
+  destination: LatLng = DESTINATIONS[0].coordinate,
   /** Parada de subida elegida por el motor de recomendación (src/planner). */
   boardStopId?: string,
 ): TripMapData {
@@ -36,8 +37,6 @@ export function tripMapData(
   const pattern = routesRepository.getPattern(route.id);
   const stops = routesRepository.getPatternStops(route.id);
   const path = pattern?.shape ?? stops.map((s) => s.coordinate);
-  const destination = getDestination(destinationId).coordinate;
-
   const destinationStop =
     routesRepository.nearestPatternStop(route.id, destination)?.coordinate ?? path[path.length - 1];
   // Sin ubicación se usa la primera parada (cabecera) como parada de muestra.

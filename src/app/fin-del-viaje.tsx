@@ -14,11 +14,19 @@ import { colors, fonts, fontSize, lineHeight, radius } from '../theme';
 
 const clock = (d: Date) => formatClassTime(dateToClassTime(d));
 
-/** "Llegaste 8 min antes…" / "…justo a tiempo…" / "…5 min tarde…" respecto a la clase. */
-export function classArrivalText(arrivedAt: Date, arriveBy: Date): string {
+/**
+ * "Llegaste 8 min antes…" / "…justo a tiempo…" / "…5 min tarde…" respecto a la clase, o a la
+ * hora de llegada elegida si el destino es un lugar del usuario (`isClass` = false).
+ */
+export function classArrivalText(arrivedAt: Date, arriveBy: Date, isClass = true): string {
   const margin = Math.floor((arriveBy.getTime() - arrivedAt.getTime()) / 60_000);
   // Muy lejos de la hora de clase (ej. un viaje de regreso): no tiene sentido compararla.
   if (Math.abs(margin) > 120) return `Llegaste a las ${clock(arrivedAt)}`;
+  if (!isClass) {
+    if (margin > 0) return `Llegaste ${margin} min antes de las ${clock(arriveBy)}`;
+    if (margin === 0) return `Llegaste justo a las ${clock(arriveBy)}`;
+    return `Llegaste ${-margin} min después de las ${clock(arriveBy)}`;
+  }
   if (margin > 0) return `Llegaste ${margin} min antes de tu clase de las ${clock(arriveBy)}`;
   if (margin === 0) return `Llegaste justo a tiempo a tu clase de las ${clock(arriveBy)}`;
   return `Llegaste ${-margin} min tarde a tu clase de las ${clock(arriveBy)}`;
@@ -26,7 +34,7 @@ export function classArrivalText(arrivedAt: Date, arriveBy: Date): string {
 
 // Cierre del viaje (al dejar de compartir o al detectar que bajaste). Sin anuncios.
 export default function TripEndScreen() {
-  const { routeId, classTime, reset } = useTrip();
+  const { routeId, classTime, destination, reset } = useTrip();
   const route = getRouteOrDefault(routeId);
   const share = useShareStatus();
   const [endedAt] = useState(() => new Date());
@@ -52,10 +60,12 @@ export default function TripEndScreen() {
     >
       <View style={styles.done}>
         <CircleCheck size={28} color={colors.success} />
-        <Text style={styles.doneText}>{classArrivalText(endedAt, arriveBy)}</Text>
+        <Text style={styles.doneText}>
+          {classArrivalText(endedAt, arriveBy, destination.kind === 'campus')}
+        </Text>
       </View>
 
-      <RouteMap height={170} routeId={route.id} />
+      <RouteMap height={170} routeId={route.id} destination={destination} />
 
       <View style={styles.card}>
         <View style={styles.row}>

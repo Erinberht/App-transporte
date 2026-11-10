@@ -16,6 +16,8 @@ type Props = {
   onCta: () => void;
   /** Separación vertical entre bloques del contenido (varía por pantalla en el diseño). */
   gap?: number;
+  /** Acción a la derecha de la marca "Mi bus" (ej. botón del perfil). */
+  headerAction?: ReactNode;
 };
 
 export function ScreenLayout({
@@ -27,6 +29,7 @@ export function ScreenLayout({
   ctaIcon,
   onCta,
   gap = 16,
+  headerAction,
 }: Props) {
   const insets = useSafeAreaInsets();
   return (
@@ -38,6 +41,7 @@ export function ScreenLayout({
             <BusFront size={20} color={colors.primary} />
             <Text style={styles.brandText}>Mi bus</Text>
           </View>
+          {headerAction}
         </View>
         <View style={styles.titleBlock}>
           <Text style={styles.title}>{title}</Text>

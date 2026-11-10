@@ -1,7 +1,9 @@
 import { createRoutesRepository } from '../../data/repository';
 import type { BusRoute, Stop, TransitDataset } from '../../data/model';
+import { servedByAnyRoute } from '../coverage';
 import {
   arrivalLabel,
+  noRouteNotice,
   recommendRoutes,
   resolveArriveBy,
   statusForMargin,
@@ -256,5 +258,47 @@ describe('recommendRoutes', () => {
     expect(statusForMargin(0)).toBe('just');
     expect(statusForMargin(4)).toBe('just');
     expect(statusForMargin(5)).toBe('early');
+  });
+});
+
+describe('otros destinos (lugares del perfil)', () => {
+  // Unos 2 km al occidente de S1: ninguna parada queda a menos de 1,2 km.
+  const lejos = { latitude: 8.75, longitude: -75.89 };
+  // A 300 m de S2: A sirve (S1 → S2); B no pasa por S2.
+  const cercaS2 = { latitude: 8.7627, longitude: -75.87 };
+
+  it('si ninguna parada queda cerca del destino, ninguna ruta sirve y se avisa', () => {
+    const p = plan({ origin: AT('s0'), destination: lejos });
+    expect(p.options.every((o) => o.kind === 'unavailable' && o.reason === 'no_path')).toBe(true);
+    expect(noRouteNotice(p, 'Casa')).toBe('Ninguna de las rutas cargadas llega cerca de Casa.');
+  });
+
+  it('sirve para un destino que no es la universidad', () => {
+    const p = plan({ origin: AT('s0'), destination: cercaS2 });
+    const a = trip(p, 'A');
+    expect(a.alightStop.id).toBe('s2');
+    expect(noRouteNotice(p, 'Trabajo')).toBeNull();
+  });
+
+  it('sin rutas a esta hora el aviso no dice que no llegan', () => {
+    const p = plan({ now: at(23, 0), arriveBy: at(23, 30) });
+    expect(noRouteNotice(p, 'Universidad de Córdoba')).toBe(
+      'Ninguna ruta te sirve ahora para llegar a Universidad de Córdoba.',
+    );
+  });
+
+  it('con límite de caminata sugiere subirlo', () => {
+    // A ~1 km de cualquier parada, con máximo 2 min a pie.
+    const origin = { latitude: 8.745, longitude: -75.88 };
+    const p = plan({ origin, walking: { pace: 'normal', maxWalkMinutes: 2 } });
+    expect(p.options.some((o) => o.kind === 'trip')).toBe(false);
+    expect(noRouteNotice(p, 'Casa')).toBe(
+      'Ninguna ruta te sirve ahora para llegar a Casa. Prueba con un límite de caminata mayor en tu perfil.',
+    );
+  });
+
+  it('servedByAnyRoute', () => {
+    expect(servedByAnyRoute(cercaS2, repo)).toBe(true);
+    expect(servedByAnyRoute(lejos, repo)).toBe(false);
   });
 });

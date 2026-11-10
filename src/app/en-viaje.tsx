@@ -90,7 +90,7 @@ export function incidentFeedback(
 
 // "En viaje"
 export default function InTripScreen() {
-  const { routeId, origin, occupancy, setOccupancy, bus: scannedBus } = useTrip();
+  const { routeId, origin, destination, occupancy, setOccupancy, bus: scannedBus } = useTrip();
   const route = getRouteOrDefault(routeId);
   const bus = linkedBusFor(scannedBus, route.id);
   const boardStopId = tripOptionFor(useRoutePlan(), route.id)?.boardStop.id;
@@ -196,6 +196,7 @@ export default function InTripScreen() {
           busLabel={route.shortName}
           routeId={route.id}
           origin={origin}
+          destination={destination}
           boardStopId={boardStopId}
         />
       </View>
