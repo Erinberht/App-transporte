@@ -103,3 +103,25 @@ jest.mock('expo-camera', () => {
   ]);
   return { CameraView, useCameraPermissions };
 });
+
+// expo-notifications: permiso sin decidir; al pedirlo se concede. Los avisos programados se
+// guardan en memoria para poder revisarlos (getAllScheduledNotificationsAsync).
+jest.mock('expo-notifications', () => {
+  const scheduled = new Map();
+  return {
+    __scheduled: scheduled,
+    AndroidImportance: { DEFAULT: 5, HIGH: 6 },
+    SchedulableTriggerInputTypes: { DATE: 'date' },
+    setNotificationHandler: jest.fn(),
+    setNotificationChannelAsync: jest.fn(async () => null),
+    getPermissionsAsync: jest.fn(async () => ({ granted: false, status: 'undetermined' })),
+    requestPermissionsAsync: jest.fn(async () => ({ granted: true, status: 'granted' })),
+    scheduleNotificationAsync: jest.fn(async (request) => {
+      const id = request.identifier ?? String(scheduled.size);
+      scheduled.set(id, { ...request, identifier: id });
+      return id;
+    }),
+    cancelScheduledNotificationAsync: jest.fn(async (id) => void scheduled.delete(id)),
+    getAllScheduledNotificationsAsync: jest.fn(async () => [...scheduled.values()]),
+  };
+});

@@ -12,6 +12,7 @@ import { getLiveStatus } from '../data/live';
 import { getRouteOrDefault, routesRepository } from '../data/repository';
 import { dateToClassTime, formatClassTime } from '../lib/classTime';
 import { useNow } from '../lib/useNow';
+import { useArrivalNotice } from '../notifications/useArrivalNotice';
 import { assessWaiting } from '../planner/disruption';
 import { nextLiveArrival } from '../planner/liveEta';
 import { arrivalLabel, type ArrivalStatus } from '../planner/recommend';
@@ -70,6 +71,20 @@ export default function BusOnMapScreen() {
   const status = situation ? STATUS_COLORS[situation.status] : null;
   const alternative = situation?.alternative;
   const altRoute = alternative ? getRouteOrDefault(alternative.routeId) : null;
+
+  // Alerta de llegada (si el usuario la activó en Mi perfil). Solo con la hora del motor.
+  useArrivalNotice(
+    option && situation
+      ? {
+          routeId: route.id,
+          routeName: route.shortName,
+          stopId: option.boardStop.id,
+          stopName: option.boardStop.name,
+          boardAt: situation.boardAt,
+          walkToStopMinutes: option.walkToStopMinutes,
+        }
+      : null,
+  );
 
   return (
     <ScreenLayout

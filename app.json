@@ -30,6 +30,14 @@
       "expo-asset",
       "expo-sqlite",
       [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#235ED7",
+          "enableRemoteNotifications": false
+        }
+      ],
+      [
         "expo-camera",
         {
           "cameraPermission": "Mi bus usa la cámara solo para leer el QR pegado en el bus. No toma ni guarda fotos.",

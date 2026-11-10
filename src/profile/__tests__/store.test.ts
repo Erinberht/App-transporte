@@ -93,6 +93,7 @@ describe('profileStore', () => {
       classes: [],
       places: [],
       walking: { pace: 'normal', maxWalkMinutes: null },
+      notices: { morning: false, departure: false, arrival: false },
     });
   });
 
