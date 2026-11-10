@@ -113,3 +113,14 @@ describe('classArrivalText', () => {
     expect(classArrivalText(llegada, clase)).toBe(texto);
   });
 });
+
+describe('classArrivalText a un lugar del perfil', () => {
+  const hora = new Date(2026, 10, 9, 18, 0);
+  it.each([
+    [new Date(2026, 10, 9, 17, 50), 'Llegaste 10 min antes de las 6:00 p. m.'],
+    [new Date(2026, 10, 9, 18, 0), 'Llegaste justo a las 6:00 p. m.'],
+    [new Date(2026, 10, 9, 18, 4), 'Llegaste 4 min después de las 6:00 p. m.'],
+  ])('%s', (llegada, texto) => {
+    expect(classArrivalText(llegada, hora, false)).toBe(texto);
+  });
+});

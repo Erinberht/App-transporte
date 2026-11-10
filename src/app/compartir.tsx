@@ -12,7 +12,7 @@ import { colors, fonts, fontSize, lineHeight, radius } from '../theme';
 
 // "Compartir recorrido"
 export default function ShareTripScreen() {
-  const { routeId, origin, bus: scannedBus } = useTrip();
+  const { routeId, origin, destination, bus: scannedBus } = useTrip();
   const route = getRouteOrDefault(routeId);
   const bus = linkedBusFor(scannedBus, route.id);
   const option = tripOptionFor(useRoutePlan(), route.id);
@@ -44,6 +44,7 @@ export default function ShareTripScreen() {
         busLabel={route.shortName}
         routeId={route.id}
         origin={origin}
+        destination={destination}
         boardStopId={boardStopId}
       />
 

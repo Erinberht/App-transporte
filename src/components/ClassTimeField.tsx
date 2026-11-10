@@ -14,6 +14,8 @@ import { colors, fonts, fontSize, radius } from '../theme';
 type Props = {
   value: ClassTime;
   onChange: (value: ClassTime) => void;
+  /** Texto sobre la hora; "Entrada a clase" por defecto (otro destino: "Llegada"). */
+  caption?: string;
 };
 
 const WEB_STEP_MINUTES = 15;
@@ -23,9 +25,9 @@ function shift({ hours, minutes }: ClassTime, delta: number): ClassTime {
   return { hours: Math.floor(total / 60), minutes: total % 60 };
 }
 
-// Campo "Hora de entrada a clase". Android abre el reloj del sistema; iOS muestra un selector
+// Campo de hora ("Hora de entrada a clase" o de llegada). Android abre el reloj del sistema; iOS muestra un selector
 // debajo del campo. En web (sin selector nativo) se ajusta con botones de ±15 min.
-export function ClassTimeField({ value, onChange }: Props) {
+export function ClassTimeField({ value, onChange, caption = 'Entrada a clase' }: Props) {
   const [iosOpen, setIosOpen] = useState(false);
   const label = formatClassTime(value);
 
@@ -46,13 +48,13 @@ export function ClassTimeField({ value, onChange }: Props) {
     <View style={styles.card}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`Hora de entrada a clase: ${label}. Cambiar`}
+        accessibilityLabel={`Hora de ${caption.toLowerCase()}: ${label}. Cambiar`}
         onPress={open}
         style={styles.row}
       >
         <Clock3 size={22} color={colors.primary} />
         <View style={styles.text}>
-          <Text style={styles.caption}>Entrada a clase</Text>
+          <Text style={styles.caption}>{caption}</Text>
           <Text style={styles.value}>{label}</Text>
         </View>
         {Platform.OS === 'web' ? (

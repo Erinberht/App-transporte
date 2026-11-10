@@ -20,6 +20,7 @@ export function RouteMap({
   routeId,
   origin,
   boardStopId,
+  destination,
   liveBuses,
 }: RouteMapProps) {
   const network = useNetworkState();
@@ -27,8 +28,8 @@ export function RouteMap({
   const offline = network.isConnected === false || network.isInternetReachable === false;
   const mapRef = useRef<MapView>(null);
   const data = useMemo(
-    () => tripMapData(routeId, origin, undefined, boardStopId),
-    [routeId, origin, boardStopId],
+    () => tripMapData(routeId, origin, destination?.coordinate, boardStopId),
+    [routeId, origin, destination, boardStopId],
   );
 
   if (offline) return <StaticRouteMap height={height} busLabel={busLabel} offline />;
@@ -59,7 +60,11 @@ export function RouteMap({
           lineJoin="round"
         />
 
-        <Marker coordinate={data.destinationStop} anchor={{ x: 0.5, y: 0.5 }} title="Universidad">
+        <Marker
+          coordinate={data.destinationStop}
+          anchor={{ x: 0.5, y: 0.5 }}
+          title={destination?.name ?? 'Universidad'}
+        >
           <View style={styles.stop} />
         </Marker>
 

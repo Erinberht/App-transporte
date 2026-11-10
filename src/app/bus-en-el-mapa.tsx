@@ -36,7 +36,7 @@ const STATUS_COLORS: Record<ArrivalStatus, { fg: string; bg: string }> = {
 // Con viajeros compartiendo, la hora es en vivo; si alguien reporta que la buseta se varó, se
 // desvió o va muy retrasada, se avisa y se sugiere la mejor otra ruta. Al subir, "Ya subí".
 export default function BusOnMapScreen() {
-  const { routeId, origin, setRouteId } = useTrip();
+  const { routeId, origin, destination, setRouteId } = useTrip();
   const route = getRouteOrDefault(routeId);
   const plan = useRoutePlan();
   const option = tripOptionFor(plan, route.id);
@@ -102,6 +102,7 @@ export default function BusOnMapScreen() {
         busLabel={route.shortName}
         routeId={route.id}
         origin={origin}
+        destination={destination}
         boardStopId={option?.boardStop.id}
         liveBuses={liveBuses.map(({ latitude, longitude }) => ({ latitude, longitude }))}
       />
@@ -159,7 +160,8 @@ export default function BusOnMapScreen() {
         <View style={styles.late} accessibilityLiveRegion="polite">
           <AlertTriangle size={18} color={colors.danger} />
           <Text style={styles.lateText}>
-            Con este bus llegas tarde a tu clase de las {clock(plan!.arriveBy)}.
+            Con este bus llegas tarde {destination.kind === 'campus' ? 'a tu clase de' : 'para'} las{' '}
+            {clock(plan!.arriveBy)}.
           </Text>
         </View>
       ) : null}

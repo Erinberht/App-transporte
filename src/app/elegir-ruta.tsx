@@ -1,5 +1,12 @@
 import { router } from 'expo-router';
-import { ArrowRight, BusFront, Check, Footprints, MapPinOff } from 'lucide-react-native';
+import {
+  AlertTriangle,
+  ArrowRight,
+  BusFront,
+  Check,
+  Footprints,
+  MapPinOff,
+} from 'lucide-react-native';
 import { useEffect, useRef } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -12,6 +19,7 @@ import { dateToClassTime, formatClassTime } from '../lib/classTime';
 import { useNow } from '../lib/useNow';
 import {
   arrivalLabel,
+  noRouteNotice,
   unavailableLabel,
   type ArrivalStatus,
   type RouteOption,
@@ -35,7 +43,7 @@ const STATUS_COLORS: Record<ArrivalStatus, { fg: string; bg: string }> = {
 
 // "Elegir ruta"
 export default function ChooseRouteScreen() {
-  const { routeId, origin, setRouteId } = useTrip();
+  const { routeId, origin, destination, setRouteId } = useTrip();
   const plan = useRoutePlan();
   const routes = routesRepository.listRoutes();
   const ordered: { routeId: string; option?: RouteOption }[] = plan
@@ -50,6 +58,7 @@ export default function ChooseRouteScreen() {
   const selectedOption = tripOptionFor(plan, routeId);
   const occupancy = useLiveOccupancy().byRoute;
   const now = useNow(30_000);
+  const notice = plan ? noRouteNotice(plan, destination.name) : null;
 
   // Preseleccionar la mejor ruta, salvo que el usuario ya haya elegido otra en esta pantalla.
   const userPicked = useRef(false);
@@ -70,6 +79,7 @@ export default function ChooseRouteScreen() {
         height={164}
         routeId={routeId}
         origin={origin}
+        destination={destination}
         boardStopId={selectedOption?.boardStop.id}
       />
 
@@ -79,6 +89,13 @@ export default function ChooseRouteScreen() {
           <Text style={styles.hintText}>
             Activa tu ubicación para ver a qué hora llegas con cada ruta.
           </Text>
+        </View>
+      ) : null}
+
+      {notice ? (
+        <View style={[styles.hint, { backgroundColor: colors.warningSoft }]}>
+          <AlertTriangle size={18} color={colors.warning} />
+          <Text style={[styles.hintText, { color: colors.warning }]}>{notice}</Text>
         </View>
       ) : null}
 
@@ -106,7 +123,11 @@ export default function ChooseRouteScreen() {
         <View style={styles.listHeader}>
           <Text style={styles.listTitle}>Rutas disponibles</Text>
           <Text style={styles.listCount}>
-            {plan ? `Para tu clase de las ${clock(plan.arriveBy)}` : `${routes.length} rutas`}
+            {plan
+              ? destination.kind === 'campus'
+                ? `Para tu clase de las ${clock(plan.arriveBy)}`
+                : `Para llegar a las ${clock(plan.arriveBy)}`
+              : `${routes.length} rutas`}
           </Text>
         </View>
 
@@ -163,7 +184,8 @@ export default function ChooseRouteScreen() {
                 {trip ? (
                   <Text style={styles.detailMuted}>
                     {trip.walkToStopMinutes} min a pie · {trip.rideMinutes} min en bus ·{' '}
-                    {trip.walkFromStopMinutes} min al campus
+                    {trip.walkFromStopMinutes} min{' '}
+                    {destination.kind === 'campus' ? 'al campus' : `hasta ${destination.name}`}
                   </Text>
                 ) : null}
                 {unavailable ? (

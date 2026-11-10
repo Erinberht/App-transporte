@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { StyleSheet, Text, View, type DimensionValue } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
+import type { Destination } from '../data/destinations';
 import type { LatLng } from '../data/geo';
 import { colors, fonts, fontSize, radius } from '../theme';
 
@@ -17,6 +18,8 @@ export type RouteMapProps = {
   origin?: LatLng | null;
   /** Parada de subida recomendada; si no hay, la más cercana a `origin`. */
   boardStopId?: string;
+  /** Destino del viaje; marca la parada de bajada. Sin valor, la universidad. */
+  destination?: Destination;
   /**
    * Posiciones en vivo del bus según los viajeros que comparten (una por bus). Si hay, se
    * dibujan en vez de la posición de muestra. El mapa ilustrativo no las usa.

@@ -27,6 +27,12 @@ export const WALK_SPEED_KMH = 4.5;
 export const DETOUR_FACTOR = 1.3;
 /** Si el campus está a menos de esto (a pie, por calles), se sugiere ir caminando. */
 export const WALK_INSTEAD_METERS = 600;
+/**
+ * Si la parada más cercana al destino queda más lejos que esto (en línea recta), la ruta no
+ * llega a ese lugar. Importa para los lugares del usuario (etapa 4.1): sin límite de caminata,
+ * el motor no debe proponer bajarse a 3 km de la casa.
+ */
+export const MAX_ALIGHT_DISTANCE_METERS = 1200;
 /** Margen desde el que se dice "Llegas N min antes" (por debajo es "Llegas justo"). */
 export const COMFORT_MINUTES = 5;
 /** Con más anticipación que esto se sugiere a qué hora salir, en vez de salir ya. */
@@ -142,6 +148,9 @@ function planRoute(routeId: string, input: Required<PlanInput>): RouteOption {
   });
   if (alightIndex === 0) return { kind: 'unavailable', routeId, reason: 'no_path' };
   const alightStop = stops[alightIndex];
+  if (distanceMeters(alightStop.coordinate, destination) > MAX_ALIGHT_DISTANCE_METERS) {
+    return { kind: 'unavailable', routeId, reason: 'no_path' };
+  }
   const walkFrom = walkMinutes(alightStop.coordinate, destination, walking);
 
   // Subida: cualquier parada antes de la de bajada; gana la que llega antes.
@@ -256,4 +265,22 @@ export function unavailableLabel(option: UnavailableOption): string {
   }
   if (option.reason === 'no_service') return 'No opera a esta hora';
   return 'No te sirve para este viaje';
+}
+
+/**
+ * Aviso cuando ninguna de las rutas cargadas sirve para el destino. null si al menos una
+ * sirve o si conviene ir caminando (ese aviso ya se muestra aparte).
+ */
+export function noRouteNotice(plan: Plan, destinationName: string): string | null {
+  if (plan.walkInstead || plan.options.some((o) => o.kind === 'trip')) return null;
+  const reasons = new Set(
+    plan.options.map((o) => (o.kind === 'unavailable' ? o.reason : 'no_path')),
+  );
+  if (reasons.size === 1 && reasons.has('no_path')) {
+    return `Ninguna de las rutas cargadas llega cerca de ${destinationName}.`;
+  }
+  const base = `Ninguna ruta te sirve ahora para llegar a ${destinationName}.`;
+  return reasons.has('walk_limit')
+    ? `${base} Prueba con un límite de caminata mayor en tu perfil.`
+    : base;
 }
