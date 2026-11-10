@@ -1,7 +1,10 @@
-import { fireEvent, screen } from '@testing-library/react-native';
+import { fireEvent, screen, waitFor } from '@testing-library/react-native';
+import * as Notifications from 'expo-notifications';
 import { Stack } from 'expo-router';
 import { renderRouter } from 'expo-router/testing-library';
 
+import BusOnMapScreen from '../app/bus-en-el-mapa';
+import ShareTripScreen from '../app/compartir';
 import ChooseRouteScreen from '../app/elegir-ruta';
 import WhereToScreen from '../app/index';
 import PlaceScreen from '../app/lugar';
@@ -23,7 +26,11 @@ const routes = {
   perfil: ProfileScreen,
   lugar: PlaceScreen,
   'elegir-ruta': ChooseRouteScreen,
+  'bus-en-el-mapa': BusOnMapScreen,
+  compartir: ShareTripScreen,
 };
+
+const scheduled = (Notifications as unknown as { __scheduled: Map<string, unknown> }).__scheduled;
 
 const open = (initialUrl: string) => renderRouter(routes, { initialUrl });
 
@@ -177,5 +184,46 @@ describe('Perfil del estudiante', () => {
     await fireEvent.changeText(screen.getByLabelText('Nombre del lugar'), '');
     await fireEvent.press(screen.getByText('Guardar lugar'));
     expect(profileStore.get().places).toMatchObject([{ id, name: 'Trabajo', icon: 'work' }]);
+  });
+
+  it('avisos: se activan uno por uno y piden permiso al activarlos', async () => {
+    await open('/perfil');
+    expect(screen.getByRole('switch', { name: 'Hora de salir' })).toHaveProp('value', false);
+
+    await fireEvent(screen.getByRole('switch', { name: 'Hora de salir' }), 'valueChange', true);
+    await waitFor(() => expect(profileStore.get().notices.departure).toBe(true));
+    expect(Notifications.requestPermissionsAsync).toHaveBeenCalled();
+    expect(screen.getByText(/Guarda un lugar de tipo Casa/)).toBeOnTheScreen();
+
+    jest
+      .mocked(Notifications.requestPermissionsAsync)
+      .mockResolvedValueOnce({ granted: false } as never);
+    await fireEvent(screen.getByRole('switch', { name: 'Tu bus se acerca' }), 'valueChange', true);
+    expect(
+      await screen.findByText(/no tiene permiso para enviarte notificaciones/),
+    ).toBeOnTheScreen();
+    expect(profileStore.get().notices.arrival).toBe(false);
+  });
+
+  it('la alerta de llegada se programa al esperar el bus y se cancela al subir', async () => {
+    scheduled.clear();
+    jest.mocked(Notifications.getPermissionsAsync).mockResolvedValue({ granted: true } as never);
+    profileStore.setNotices({ morning: false, departure: false, arrival: true });
+    // 4:30 a. m.: el primer bus pasa en un buen rato, hay tiempo para avisar.
+    jest.setSystemTime(new Date(2026, 10, 9, 4, 30));
+
+    await open('/');
+    await fireEvent.press(screen.getByText('Permitir ubicación'));
+    await screen.findByText('Ubicación actual detectada');
+    await fireEvent.press(screen.getByText('Buscar rutas'));
+    await fireEvent.press(await screen.findByText('Ver mi bus'));
+
+    await waitFor(() => expect(scheduled.has('arrival')).toBe(true));
+    const request = scheduled.get('arrival') as Notifications.NotificationRequestInput;
+    expect(request.content.title).toMatch(/^Tu \w+ se acerca$/);
+
+    await fireEvent.press(screen.getByText('Ya subí'));
+    await waitFor(() => expect(scheduled.has('arrival')).toBe(false));
+    jest.mocked(Notifications.getPermissionsAsync).mockResolvedValue({ granted: false } as never);
   });
 });

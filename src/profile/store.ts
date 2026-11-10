@@ -15,6 +15,7 @@ import {
   MAX_PLACES,
   parseProfile,
   type ClassEntry,
+  type NoticePrefs,
   type PlaceIcon,
   type Profile,
   type Weekday,
@@ -127,8 +128,11 @@ export function createProfileStore(storage: ProfileStorage) {
     setWalking(walking: WalkingPrefs) {
       update((p) => ({ ...p, walking }));
     },
+    setNotices(notices: NoticePrefs) {
+      update((p) => ({ ...p, notices }));
+    },
 
-    /** "Borrar mi perfil": elimina horario, lugares y opciones de caminata del teléfono. */
+    /** "Borrar mi perfil": elimina horario, lugares, caminata y avisos del teléfono. */
     clear() {
       profile = EMPTY_PROFILE;
       try {

@@ -12,6 +12,7 @@ import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { loadCachedDataset, refreshDataset } from '../data/transitSync';
+import { startNotificationSync } from '../notifications/scheduler';
 // Define la tarea de ubicación en segundo plano al cargar la app (expo-task-manager lo exige).
 import '../sharing/expoTracker';
 import { TripProvider } from '../state/trip';
@@ -38,6 +39,11 @@ export default function RootLayout() {
   // Descarga el catálogo del backend (si está configurado) para el próximo arranque.
   useEffect(() => {
     refreshDataset();
+  }, []);
+
+  // Avisos locales de la mañana, de salida y de llegada (si el usuario los activó).
+  useEffect(() => {
+    startNotificationSync();
   }, []);
 
   // Si falla la carga de fuentes se continúa con la fuente del sistema.

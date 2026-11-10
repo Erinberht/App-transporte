@@ -7,6 +7,7 @@ El perfil es **opcional**. Se edita en "Mi perfil" (`src/app/perfil.tsx`), que s
 | Horario de clases    | Por día (lunes a domingo): hora de entrada y nombre opcional. Máximo 12 clases por día  | "¿A dónde vas?" propone la próxima clase de hoy  |
 | Lugares frecuentes   | Nombre, tipo (casa, trabajo, otro) y ubicación. Máximo 10                               | Destinos además de la universidad                |
 | Opciones de caminata | Ritmo (normal o lento) y máximo a pie por tramo (sin límite, o de 2 a 16 min de 2 en 2) | Motor de recomendación (`docs/RECOMENDACION.md`) |
+| Avisos               | Sugerencia de la mañana, hora de salir y "Tu bus se acerca" (apagados por defecto)      | `docs/AVISOS.md`                                 |
 
 ## Código
 
@@ -30,5 +31,5 @@ Se marca con **"Usar mi ubicación actual"** o **tocando el mapa / arrastrando e
 ## Privacidad (Ley 1581 de 2012)
 
 - El perfil **se queda en el teléfono**. No se envía al backend ni se asocia al usuario anónimo de Supabase.
-- "Borrar mi perfil" (con confirmación) elimina horario, lugares y opciones de caminata. Desinstalar la app también los borra.
+- "Borrar mi perfil" (con confirmación) elimina horario, lugares, caminata y avisos (y cancela los programados). Desinstalar la app también los borra.
 - **Sincronización: pospuesta.** Requiere cuentas (hoy solo hay usuarios anónimos) y la revisión legal de la etapa 6.1. Un horario más la ubicación de la casa identifican a una persona aunque el id sea anónimo. Cuando llegue, debe ser opcional, con consentimiento explícito, y "Borrar mi perfil" debe borrar también la copia del servidor.

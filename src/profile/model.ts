@@ -55,13 +55,31 @@ export type Place = {
   coordinate: LatLng;
 };
 
+/** Avisos locales (etapa 4.2): cada tipo se activa por separado. Todos apagados por defecto. */
+export type NoticePrefs = {
+  /** Sugerencia de la mañana: ruta y hora de salida para la primera clase del día. */
+  morning: boolean;
+  /** "Sal en 10 min para llegar a tu clase de las 7". */
+  departure: boolean;
+  /** Mientras esperas: "Tu bus se acerca". */
+  arrival: boolean;
+};
+
+export const DEFAULT_NOTICES: NoticePrefs = { morning: false, departure: false, arrival: false };
+
 export type Profile = {
   classes: ClassEntry[];
   places: Place[];
   walking: WalkingPrefs;
+  notices: NoticePrefs;
 };
 
-export const EMPTY_PROFILE: Profile = { classes: [], places: [], walking: DEFAULT_WALKING };
+export const EMPTY_PROFILE: Profile = {
+  classes: [],
+  places: [],
+  walking: DEFAULT_WALKING,
+  notices: DEFAULT_NOTICES,
+};
 
 export const MAX_PLACES = 10;
 export const MAX_CLASSES_PER_DAY = 12;
@@ -140,6 +158,15 @@ function parseWalking(v: unknown): WalkingPrefs {
   return { pace, maxWalkMinutes };
 }
 
+function parseNotices(v: unknown): NoticePrefs {
+  if (!isObject(v)) return DEFAULT_NOTICES;
+  return {
+    morning: v.morning === true,
+    departure: v.departure === true,
+    arrival: v.arrival === true,
+  };
+}
+
 const present = <T>(v: T | null): v is T => v !== null;
 
 /**
@@ -154,5 +181,6 @@ export function parseProfile(raw: unknown): Profile {
     classes,
     places: places.slice(0, MAX_PLACES),
     walking: parseWalking(raw.walking),
+    notices: parseNotices(raw.notices),
   };
 }

@@ -50,6 +50,7 @@ describe('parseProfile', () => {
         { id: 'p', name: 'Casa', icon: 'home', coordinate: { latitude: 8.75, longitude: -75.88 } },
       ],
       walking: { pace: 'slow', maxWalkMinutes: 8 },
+      notices: { morning: true, departure: false, arrival: true },
     };
     expect(parseProfile(JSON.parse(JSON.stringify(raw)))).toEqual(raw);
   });

@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Button } from '../components/Button';
 import { ClassTimeField } from '../components/ClassTimeField';
+import { NoticeSettings } from '../components/NoticeSettings';
 import { PLACE_ICONS } from '../components/placeIcons';
 import { ScreenLayout } from '../components/ScreenLayout';
 import { placeToDestination } from '../data/destinations';
@@ -32,7 +33,7 @@ function suggestedStart(last: ClassTime | undefined): ClassTime {
   return { hours: Math.min(last.hours + 2, 22), minutes: last.minutes };
 }
 
-// "Mi perfil" (etapa 4.1): horario de clases, lugares frecuentes y opciones de caminata.
+// "Mi perfil" (etapas 4.1 y 4.2a): horario de clases, lugares frecuentes, caminata y avisos.
 // Es opcional y vive solo en el teléfono (src/profile, docs/PERFIL.md).
 export default function ProfileScreen() {
   const profile = useProfile();
@@ -206,6 +207,8 @@ export default function ProfileScreen() {
         </View>
       </View>
 
+      <NoticeSettings />
+
       {/* Privacidad y borrado */}
       <View style={styles.section}>
         <View style={styles.privacy}>
@@ -217,7 +220,7 @@ export default function ProfileScreen() {
         {confirmClear ? (
           <View style={styles.confirm}>
             <Text style={styles.confirmText}>
-              ¿Borrar tu horario, tus lugares y tus opciones de caminata? No se puede deshacer.
+              ¿Borrar tu horario, tus lugares, tu caminata y tus avisos? No se puede deshacer.
             </Text>
             <Button
               label="Sí, borrar mi perfil"
