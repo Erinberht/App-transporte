@@ -10,6 +10,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import * as Sentry from '@sentry/react-native';
 
 import { loadCachedDataset, refreshDataset } from '../data/transitSync';
 import { startNotificationSync } from '../notifications/scheduler';
@@ -18,6 +19,11 @@ import '../sharing/expoTracker';
 import { TripProvider } from '../state/trip';
 import { AuthProvider } from '../state/auth';
 
+Sentry.init({
+  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN || '',
+  debug: false,
+});
+
 // Mantener el splash hasta que carguen las fuentes del diseño (Inter).
 SplashScreen.preventAutoHideAsync();
 
@@ -25,7 +31,7 @@ SplashScreen.preventAutoHideAsync();
 // Es síncrono y ocurre antes de mostrar cualquier pantalla.
 loadCachedDataset();
 
-export default function RootLayout() {
+function RootLayout() {
   const [loaded, error] = useFonts({
     Inter_400Regular,
     Inter_500Medium,
@@ -61,3 +67,5 @@ export default function RootLayout() {
     </SafeAreaProvider>
   );
 }
+
+export default Sentry.wrap(RootLayout);
