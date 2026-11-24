@@ -7,6 +7,7 @@ type Props = {
   label: string;
   onPress: () => void;
   icon?: LucideIcon;
+  disabled?: boolean;
   /**
    * "primary": acción principal. "outline": acción secundaria.
    * "selected": opción elegida (alineada a la izquierda, con check al final).
@@ -14,20 +15,22 @@ type Props = {
   variant?: 'primary' | 'outline' | 'selected';
 };
 
-export function Button({ label, onPress, icon: Icon, variant = 'primary' }: Props) {
+export function Button({ label, onPress, icon: Icon, variant = 'primary', disabled }: Props) {
   const selected = variant === 'selected';
   const textColor = variant === 'primary' ? colors.onPrimary : colors.primary;
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityState={selected ? { selected } : undefined}
-      onPress={onPress}
+      onPress={disabled ? undefined : onPress}
+      disabled={disabled}
       style={({ pressed }) => [
         styles.base,
         variant === 'primary' && styles.primary,
         variant === 'outline' && styles.outline,
         selected && styles.selected,
         pressed && { opacity: 0.85 },
+        disabled && { opacity: 0.5 },
       ]}
     >
       {Icon ? <Icon size={20} color={textColor} /> : null}

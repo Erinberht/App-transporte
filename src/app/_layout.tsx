@@ -16,6 +16,7 @@ import { startNotificationSync } from '../notifications/scheduler';
 // Define la tarea de ubicación en segundo plano al cargar la app (expo-task-manager lo exige).
 import '../sharing/expoTracker';
 import { TripProvider } from '../state/trip';
+import { AuthProvider } from '../state/auth';
 
 // Mantener el splash hasta que carguen las fuentes del diseño (Inter).
 SplashScreen.preventAutoHideAsync();
@@ -51,10 +52,12 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <TripProvider>
-        <StatusBar style="dark" />
-        <Stack screenOptions={{ headerShown: false, animation: 'slide_from_right' }} />
-      </TripProvider>
+      <AuthProvider>
+        <TripProvider>
+          <StatusBar style="dark" />
+          <Stack screenOptions={{ headerShown: false, animation: 'slide_from_right' }} />
+        </TripProvider>
+      </AuthProvider>
     </SafeAreaProvider>
   );
 }

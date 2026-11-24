@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { Pencil, Plus, ShieldCheck, Trash } from 'lucide-react-native';
+import { Pencil, Plus, ShieldCheck, Trash, User } from 'lucide-react-native';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
@@ -22,6 +22,8 @@ import {
   type Weekday,
 } from '../profile/model';
 import { profileStore, useProfile } from '../profile/store';
+import { useAuth } from '../state/auth';
+import { getSupabase } from '../api/supabase';
 import { colors, fonts, fontSize, lineHeight, radius } from '../theme';
 
 const WALK_LIMITS: (number | null)[] = [null];
@@ -40,6 +42,7 @@ export default function ProfileScreen() {
   const [day, setDay] = useState<Weekday>(() => new Date().getDay() as Weekday);
   const [confirmClear, setConfirmClear] = useState(false);
   const dayClasses = classesOn(profile.classes, day);
+  const { user } = useAuth();
 
   return (
     <ScreenLayout
@@ -49,6 +52,33 @@ export default function ProfileScreen() {
       onCta={() => (router.canGoBack() ? router.back() : router.replace('/'))}
       gap={24}
     >
+      {/* Cuenta */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Cuenta</Text>
+        <Text style={styles.muted}>
+          Regístrate para guardar tu perfil en la nube y respaldarlo.
+        </Text>
+        {user ? (
+          <View style={[styles.card, styles.placeRow]}>
+            <View style={styles.badge}>
+              <User size={18} color={colors.primary} />
+            </View>
+            <View style={styles.placeText}>
+              <Text style={styles.placeName}>{user.email}</Text>
+            </View>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => getSupabase()?.auth.signOut()}
+              style={styles.iconButton}
+            >
+              <Text style={[styles.link, { color: colors.danger }]}>Salir</Text>
+            </Pressable>
+          </View>
+        ) : (
+          <Button label="Iniciar Sesión / Registro" onPress={() => router.push('/auth')} />
+        )}
+      </View>
+
       {/* Horario */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Horario de clases</Text>

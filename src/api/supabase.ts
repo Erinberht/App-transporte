@@ -2,8 +2,7 @@
 //
 // Es opcional: sin EXPO_PUBLIC_SUPABASE_URL y EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY la app
 // funciona sin backend, con las rutas que trae incluidas. Ver .env.example y docs/BACKEND.md.
-import 'expo-sqlite/localStorage/install';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { AppState } from 'react-native';
 
@@ -36,7 +35,7 @@ export function getSupabase(): AppSupabaseClient | null {
 
   client = createClient<Database>(config.url, config.publishableKey, {
     auth: {
-      storage: localStorage,
+      storage: AsyncStorage,
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: false,
