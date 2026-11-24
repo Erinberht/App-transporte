@@ -1,3 +1,7 @@
+jest.mock('@react-native-async-storage/async-storage', () =>
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock')
+);
+
 // Mocks globales para módulos nativos que no existen en el entorno de Jest.
 
 jest.mock(
